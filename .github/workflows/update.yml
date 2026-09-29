@@ -1,0 +1,26 @@
+name: Update V2Ray Sub
+on:
+  schedule:
+    - cron: "0 */6 * * *" # هر 6 ساعت ⏰
+  workflow_dispatch: # دکمه اجرای دستی برای وقتایی که عجله داری! 🏃‍♂️
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run Scraper 🕷️
+        run: python scraper.py
+      - name: Commit and Push 🚀
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add sub.txt
+          git commit -m "Auto-update configs 😎" || echo "No changes to commit"
+          git push
