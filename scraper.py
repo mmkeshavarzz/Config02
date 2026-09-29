@@ -1,36 +1,51 @@
-import requests
-import re
 import base64
+import os
+import re
+import requests
 
-# لیست کانال‌هایی که می‌خوایم غارتشون کنیم 🏴‍☠️
-CHANNELS = ["v2ray_configs_channel", "free_v2ray_worlds"] 
-CONFIG_REGEX = r'(vmess|vless|trojan|ss)://[a-zA-Z0-9@:%._\+~#=/?&A-Za-z0-9\-]+'
+# لیست کانال‌ها (حتما بدون @ بنویس)
+CHANNELS = [
+    "v2ray_free_conf",
+    "PrivateVPNs",
+    "v2rayngvpn",
+]
 
-def get_configs():
-    all_configs = []
-    for channel in CHANNELS:
-        try:
-            # نیازی به توکن نیست، از نسخه وب تلگرام می‌دزدیم! 🤫
-            url = f"https://t.me/s/{channel}"
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                configs = re.findall(CONFIG_REGEX, response.text)
-                all_configs.extend(configs)
-        except Exception as e:
-            print(f"Error checking {channel}: {e}")
-    
-    # اینجا می‌تونی یه فیلتر بذاری که آی‌پی‌های ایران رو حذف کنه 
-    # (معمولا کانفیگ‌های پابلیک خارجی، آی‌پی ایران ندارن)
-    
-    return list(set(all_configs))
+configs = []
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+}
 
-if __name__ == "__main__":
-    configs = get_configs()
-    if configs:
-        # تبدیل به Base64 برای لینک ساب
-        raw_text = "\n".join(configs)
-        encoded = base64.b64encode(raw_text.encode('utf-8')).decode('utf-8')
-        
-        with open("sub.txt", "w") as f:
-            f.write(encoded)
-        print("✅ صید امروز با موفقیت انجام شد! کانفیگ‌ها ذخیره شدند.")
+# پروتکل‌های استاندارد
+PATTERN = r"(vmess://[a-zA-Z0-9+=]+|vless://[^\s]+|ss://[^\s]+|trojan://[^\s]+)"
+
+for channel in CHANNELS:
+    url = f"https://t.me/s/{channel}"
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            found = re.findall(PATTERN, response.text)
+            configs.extend(found)
+            print(f"✅ کانال {channel}: تعداد {len(found)} کانفیگ شکار شد.")
+        else:
+            print(f"⚠️ کانال {channel} پاسخ نداد (کد {response.status_code})")
+    except Exception as e:
+        print(f"❌ خطا در اسکرپ {channel}: {e}")
+
+# حذف تکراری‌ها
+unique_configs = list(set(configs))
+print(f"🎯 مجموع کانفیگ‌های یکتا: {len(unique_configs)}")
+
+# ساخت رشته نهایی
+content = "\n".join(unique_configs)
+if not content.strip():
+    # اگه هیچی پیدا نشد، یه خط کامنت بذار که فایل خالی نمونه و گیت ارور نده!
+    content = "# No configs found at this time"
+
+# تبدیل به بیس64
+encoded_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+
+# ذخیره حتمی در مسیر اصلی
+with open("sub.txt", "w", encoding="utf-8") as f:
+    f.write(encoded_content)
+
+print("🚀 فایل sub.txt با موفقیت ایجاد شد!")
