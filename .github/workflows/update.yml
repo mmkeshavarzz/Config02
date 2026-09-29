@@ -22,12 +22,14 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          # بررسی می‌کنیم آیا فایل اصلا وجود خارجی داره یا نه
+          # لیست فایل‌ها رو پرینت کن ببینیم چیا ساخته شده
+          ls -la
+          
           if [ -f "sub.txt" ]; then
             git add sub.txt
-            # فقط اگه فایل تغییر کرده بود کامیت کن تا ارور الکی نده
-            git diff --staged --quiet || (git commit -m "🤖 Auto-update configs [skip ci]" && git push)
+            git diff --staged --quiet || (git commit -m "🤖 Auto-update configs" && git push)
+            echo "🔥 همه چیز با موفقیت پوش شد!"
           else
-            echo "🚨 ارور فاجعه‌بار: فایل sub.txt اصلاً ساخته نشده!"
+            echo "❌ فایل sub.txt ساخته نشده که بخوام کامیت کنم!"
             exit 1
           fi
