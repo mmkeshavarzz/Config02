@@ -2,7 +2,7 @@ name: Update V2Ray Sub
 
 on:
   schedule:
-    # هر ۶ ساعت یک‌بار به وقت گرینویچ
+    # هر ۶ ساعت یک‌بار اجرا شود
     - cron: '0 */6 * * *'
   workflow_dispatch: # دکمه اجرای دستی
 
@@ -23,9 +23,10 @@ jobs:
         run: |
           pip install requests
 
-      # 🪄 ترفند نجات: ساخت پیشاپیش فایل تا گیت بهانه‌گیری نکنه
-      - name: Pre-create sub.txt 📄
+      # ایجاد پیشاپیش فایل و پوشه‌ها برای جلوگیری از بهانه‌گیری Git
+      - name: Prepare Folders and Files 📄
         run: |
+          mkdir -p protocols countries
           touch sub.txt
 
       - name: Run Scraper 👾
@@ -37,6 +38,8 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # فقط در صورتی کامیت می‌کنه که تغییری ایجاد شده باشه
-          git add sub.txt
-          git diff --staged --quiet || (git commit -m "🤖 Auto-update configs: $(date +'%Y-%m-%d %H:%M')" && git push)
+          # اضافه کردن تمام تغییرات (فایل اصلی + پوشه‌های کشور و پروتکل)
+          git add sub.txt protocols/ countries/
+          
+          # کامیت تنها در صورت وجود تفاوت واقعی
+          git diff --staged --quiet || (git commit -m "🤖 Auto-update & categorize configs: $(date +'%Y-%m-%d %H:%M')" && git push)
