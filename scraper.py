@@ -21,15 +21,35 @@ import time
 from urllib.parse import urlparse, parse_qs, unquote
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# 💎 ۱. کانال‌های هدف
+# ==============================================================================
+# 💎 ۱. لیست ۲۰ کانال طلایی و فعال (پایش‌شده بر اساس ممبر > 10K و ویو > 3K)
+# ==============================================================================
 CHANNELS = [
-    "ConfigV2RayNG", "v2rayshahin", "v2ray_configs_pools", 
-    "v2rayngvpn", "Hope_Net", "V2ray_Alpha", 
-    "v2ray_outlineir", "Napsternetv_config", "FreeV2rays", 
-    "v2ray_free_conf", "filembad", "exclaveVPN", 
-    "V2rayConfigList", "vpnfail_v2ray", "V2rayuir", 
-    "new_mtproxi2", "v2ray_extractor"
+    # --- ۱۰ غول سنگین‌وزن جدید و پربازدید ---
+    "n4vpn",               # غول کانفیگ‌های بدون قطعی با ویو بالا
+    "v2rayNG3",            # یکی از قدیمی‌ترین و معتبرترین مراجع V2Ray
+    "outlineOpenKey",      # سورس روزانه سرورهای کم‌نظیر SS و VLESS
+    "PrivateVPNs",         # سرورهای روزانه با پینگ پایین
+    "v2ray_custom",        # تمرکز ویژه روی Reality و پروتکل‌های ضد فیلتر
+    "DarkVPNpro",          # ساب‌های دوره‌ای و لینک‌های فعال
+    "v2rayNG_VPNo",        # پینگ سبز تضمینی برای اپراتورهای موبایل
+    "CucumberNet",         # کانال باسابقه با اعضای فعال
+    "proxystore11",        # پخش پیوسته کانفیگ‌های VLESS
+    "v2fly",               # مانیتور شده و دارای سرورهای پایدار
+    
+    # --- ۱۰ برگزیده از لیست اولیه‌ی خودت ---
+    "ConfigV2RayNG",
+    "v2rayshahin",
+    "v2ray_configs_pools",
+    "v2rayngvpn",
+    "Hope_Net",
+    "V2ray_Alpha",
+    "v2ray_outlineir",
+    "Napsternetv_config",
+    "filembad",
+    "V2rayConfigList"
 ]
+
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
