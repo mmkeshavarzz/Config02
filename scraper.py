@@ -5,17 +5,14 @@ import time
 
 # 💎 لیست کانال‌های آپدیت شده و فعال تلگرام
 CHANNELS = [
-    "ConfigV2RayNG",
-    "v2rayshahin",
-    "v2ray_configs_pools",
-    "v2rayngvpn", 
-    "Hope_Net",
-    "V2ray_Alpha",
-    "v2ray_outlineir",
-    "Napsternetv_config",
-    "FreeV2rays",
-    "v2ray_free_conf"
+    "ConfigV2RayNG", "v2rayshahin", "v2ray_configs_pools", 
+    "v2rayngvpn", "Hope_Net", "V2ray_Alpha", 
+    "v2ray_outlineir", "Napsternetv_config", "FreeV2rays", 
+    "v2ray_free_conf", "filembad", "exclaveVPN", 
+    "V2rayConfigList", "vpnfail_v2ray", "V2rayuir", 
+    "new_mtproxi2", "v2ray_extractor"
 ]
+
 
 configs = []
 # یه یوزر ایجنت شیک و مجلسی برای عبور از سد تلگرام 🕵️‍♂️
