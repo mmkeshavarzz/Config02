@@ -19,8 +19,15 @@ jobs:
         run: python scraper.py
       - name: Commit and Push 🚀
         run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git add sub.txt
-          git commit -m "Auto-update configs 😎" || echo "No changes to commit"
-          git push
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # بررسی می‌کنیم آیا فایل اصلا وجود خارجی داره یا نه
+          if [ -f "sub.txt" ]; then
+            git add sub.txt
+            # فقط اگه فایل تغییر کرده بود کامیت کن تا ارور الکی نده
+            git diff --staged --quiet || (git commit -m "🤖 Auto-update configs [skip ci]" && git push)
+          else
+            echo "🚨 ارور فاجعه‌بار: فایل sub.txt اصلاً ساخته نشده!"
+            exit 1
+          fi
