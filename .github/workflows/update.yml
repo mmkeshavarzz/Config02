@@ -2,9 +2,8 @@ name: Update V2Ray Sub
 
 on:
   schedule:
-    # هر ۶ ساعت یک‌بار اجرا شود
     - cron: '0 */6 * * *'
-  workflow_dispatch: # دکمه اجرای دستی
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -23,13 +22,17 @@ jobs:
         run: |
           pip install requests
 
-      # ایجاد پیشاپیش فایل و پوشه‌ها برای جلوگیری از بهانه‌گیری Git
       - name: Prepare Folders and Files 📄
         run: |
           mkdir -p protocols countries
           touch sub.txt
 
       - name: Run Scraper 👾
+        # متغیرهای محیطی که کد پایتون بهشون نیاز داره رو از Secretها می‌گیریم
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           python scraper.py
 
@@ -38,8 +41,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # اضافه کردن تمام تغییرات (فایل اصلی + پوشه‌های کشور و پروتکل)
           git add sub.txt protocols/ countries/
           
-          # کامیت تنها در صورت وجود تفاوت واقعی
           git diff --staged --quiet || (git commit -m "🤖 Auto-update & categorize configs: $(date +'%Y-%m-%d %H:%M')" && git push)
