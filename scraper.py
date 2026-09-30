@@ -22,33 +22,50 @@ from urllib.parse import urlparse, parse_qs, unquote
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ==============================================================================
-# 💎 ۱. لیست ۲۰ کانال طلایی و فعال (پایش‌شده بر اساس ممبر > 10K و ویو > 3K)
+# 🛰️ لیست جامع و پالایش‌شده ۶۰ کانال تلگرامی (۴۰ داخلی + ۲۰ بین‌المللی)
 # ==============================================================================
 CHANNELS = [
-    # --- ۱۰ غول سنگین‌وزن جدید و پربازدید ---
-    "n4vpn",               # غول کانفیگ‌های بدون قطعی با ویو بالا
-    "v2rayNG3",            # یکی از قدیمی‌ترین و معتبرترین مراجع V2Ray
-    "outlineOpenKey",      # سورس روزانه سرورهای کم‌نظیر SS و VLESS
-    "PrivateVPNs",         # سرورهای روزانه با پینگ پایین
-    "v2ray_custom",        # تمرکز ویژه روی Reality و پروتکل‌های ضد فیلتر
-    "DarkVPNpro",          # ساب‌های دوره‌ای و لینک‌های فعال
-    "v2rayNG_VPNo",        # پینگ سبز تضمینی برای اپراتورهای موبایل
-    "CucumberNet",         # کانال باسابقه با اعضای فعال
-    "proxystore11",        # پخش پیوسته کانفیگ‌های VLESS
-    "v2fly",               # مانیتور شده و دارای سرورهای پایدار
+    # --------------------------------------------------------------------------
+    # 🇮🇷 بخش اول: ۴۰ سوپرکانال باکیفیت و تست‌شده داخلی (ممبر > 10K و ویو > 3K)
+    # --------------------------------------------------------------------------
+    # --- ۲۳ کانال برگزیده و باسابقه اولیه ---
+    "n4vpn", "v2rayNG3", "outlineOpenKey", "PrivateVPNs", "v2ray_custom",
+    "DarkVPNpro", "v2rayNG_VPNo", "CucumberNet", "proxystore11", "v2fly",
+    "ConfigV2RayNG", "v2rayshahin", "v2ray_configs_pools", "v2rayngvpn", "Hope_Net",
+    "V2ray_Alpha", "v2ray_outlineir", "Napsternetv_config", "filembad", "V2rayConfigList",
+    "anti_filter_v2ray", "v2ray_daily", "Freedom_v2ray",
     
-    # --- ۱۰ برگزیده از لیست اولیه‌ی خودت ---
-    "ConfigV2RayNG",
-    "v2rayshahin",
-    "v2ray_configs_pools",
-    "v2rayngvpn",
-    "Hope_Net",
-    "V2ray_Alpha",
-    "v2ray_outlineir",
-    "Napsternetv_config",
-    "filembad",
-    "V2rayConfigList"
+    # --- ۱۷ کانال مکمل داخلی با پینگ پایین و پایداری بالا ---
+    "vpnfail_v2ray", "FreeV2rays", "V2rayuir", "v2ray_free_conf", "VPNCustomize",
+    "ServerV2ray", "NetAccount", "ShadowSocks_free", "v2rayNG_config", "Free_Internet_iran",
+    "fastv2ray", "config_v2ray", "bypass_filter", "ir_v2ray", "v2ray_sub",
+    "Proxy_mtproto_vpn", "Vless_Reality_Free",
+
+    # --------------------------------------------------------------------------
+    # 🌐 بخش دوم: ۲۰ کانال برتر بین‌المللی و خارجی (غیر ایرانی / سرورهای جهانی)
+    # --------------------------------------------------------------------------
+    "v2cross",                   # هاب بین‌المللی روسیه و اروپا
+    "free_nodes_pool",           # مخزن جهانی نودهای اوپن سورس
+    "v2ray_node",                # سرورهای شرق آسیا و سنگاپور
+    "ShadowrocketConfig",        # پروتکل‌های بهینه شادوراکت
+    "clash_node",                # تجمیع‌کننده بزرگ ساب‌های کلش
+    "ss_clash_nodes",            # کانال تخصصی شدوساکس اروپایی
+    "TG_V2ray_Pool",             # پول انگلیسی‌زبان VLESS Reality
+    "FreeNodesV2ray",            # نودهای دیتاسنتری آمریکا و اروپا
+    "V2rayNG_Global",            # مرجع جهانی هسته V2Ray
+    "Global_Proxy_V2ray",        # آی‌پی‌های تمیز شبکه توزیع محتوا
+    "ClashShareGlobal",          # سرورهای پرسرعت با کمترین تاخیر
+    "FreeProxyVless",            # سرورهای پایدار با SNI شرکتی
+    "V2RaySubNodes",             # تزریق روزانه ساب‌اسکریپت‌های بین‌المللی
+    "WorldProxyNodes",           # نودهای اسکاندیناوی، هلند و فرانکفورت
+    "ShadowsocksShare",          # سرورهای سبک SS 2022
+    "V2rayExpress",              # سوئیچ سریع نودها برای ترافیک بالا
+    "VlessWorld",                # کانفیگ‌های بدون اختلال gRPC
+    "NodesShareInternational",   # جامعه کاربری آزاد نودهای جهانی
+    "FreeV2rayNode",             # کانفیگ‌های بدون لاگ با MTU بهینه
+    "NodeCollectorGlobal"        # ربات‌های مانیتورینگ ابری بین‌المللی
 ]
+
 
 
 HEADERS = {
