@@ -3,39 +3,6 @@
 Reimplements the criterion the upstream project publishes in its own header --
 "a real proxied request to https://cp.cloudflare.com/generate_204 succeeded in
 ALL 3 independent runs" -- directly against Xray-core rather than a wrapper.
-
-The nodes reaching this stage deliberately carry none of ``fm``, ``dialMode``,
-``ech``, ``echOutbound``, ``fp`` or ``cs``: those shape how a connection is made
-rather than whether the node works, so the check runs over the core's plain
-TLS and transform.finalise adds them to the survivors afterwards.
-:func:`preflight` therefore validates every published shape as well as the
-tested one, because nothing else in the pipeline ever hands those six to the
-core.
-
-Shape of a round: nodes are grouped into batches; each batch becomes one Xray
-process with one loopback HTTP inbound per node, routed to that node's outbound.
-Every node is then probed concurrently through its own inbound. Three rounds run
-and only the intersection survives, because a single run misgrades a substantial
-fraction of nodes -- upstream measured 25-64% of working nodes as flaky.
-
-The default outbound is a blackhole, so a node whose routing rule somehow fails
-to match cannot fall through to a direct connection and report itself healthy.
-
-Two comparable projects were reviewed for ideas. Delta-Kronecker/V2ray-Config
-(src/validator.go) also runs a real proxied request, and its list of test URLs
-is where TEST_ENDPOINTS below comes from. itsyebekhe/PSG (main.py) does not
-proxy at all -- it checks DNS plus a TCP connect, which cannot tell a live
-proxy from any host with an open port.
-
-Three of their techniques are deliberately not used here:
-
-* A TCP-ping prefilter (both projects). Rule 10 points every node at the same
-  Cloudflare address, so a TCP connect always succeeds and filters nothing.
-* Retrying failed configs (Delta-Kronecker retries in rounds). That is the
-  opposite of requiring 3 of 3: a retry hands a flaky node extra chances to
-  pass, which is what the intersection exists to stop.
-* Static per-protocol field validation (PSG). Already covered -- xray run -test
-  validates every config first and the bisect isolates whatever it rejects.
 """
 
 from __future__ import annotations
@@ -65,13 +32,13 @@ except ImportError:
 # ==============================================================================
 # 🛑 شبیه‌ساز فیلترینگ ایران (Virtual GFW) & اعتبارسنجی‌های تخصصی
 # ==============================================================================
-MAX_ACCEPTABLE_TCP_LATENCY = 0.6  # سخت‌گیری وحشتناک روی پینگ (۶۰۰ میلی‌ثانیه برای گیت‌هاب)
+MAX_ACCEPTABLE_TCP_LATENCY = 0.6  # سخت‌گیری روی پینگ (۶۰۰ میلی‌ثانیه برای گیت‌هاب)
 
 # کلمات و دامنه‌هایی که در ایران قطعا در لایه SNI مسدود می‌شوند
 IRAN_FILTERED_KEYWORDS = [
     "google", "youtube", "instagram", "facebook", "twitter", "x.com", 
     "telegram", "whatsapp", "tiktok", "netflix", "pornhub", "xvideos",
-    "workers.dev", "pages.dev", "github.io" # به شدت روی کلودفلر ورکرز در ایران حساسیت هست
+    "workers.dev", "pages.dev", "github.io" # حساسیت روی کلودفلر ورکرز در ایران
 ]
 
 # دامنه‌های زباله که فقط برای تست محلی بودن و در اینترنت واقعی کار نمی‌کنند
@@ -156,27 +123,32 @@ def evaluate_node_vitality(config: dict) -> dict | None:
     if tls == "reality" and not validate_reality_config(raw_link):
         return None
 
-    # ۴. ریزالو DNS (تست اینکه دامنه اصلا وجود خارجی دارد یا نه)
+    # ۴. ریزالو DNS (پشتیبانی از IPv4 و IPv6 بدون قفل شدن)
     try:
-        ip = socket.gethostbyname(host)
+        infos = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
+        if not infos:
+            return None
+        ip = infos[0][4][0]
         if any(ip.startswith(prefix) for prefix in BLOCKED_IP_PREFIXES):
             return None
     except Exception:
         return None
 
     # ۵. تست اتصال واقعی TCP با بی‌رحمی تمام (تایم‌اوت ۰.۶ ثانیه)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(MAX_ACCEPTABLE_TCP_LATENCY)
-    start_time = time.perf_counter()
-
+    sock = None
     try:
+        family = socket.AF_INET6 if ":" in ip else socket.AF_INET
+        sock = socket.socket(family, socket.SOCK_STREAM)
+        sock.settimeout(MAX_ACCEPTABLE_TCP_LATENCY)
+        start_time = time.perf_counter()
         sock.connect((ip, port))
         latency = round((time.perf_counter() - start_time) * 1000, 2)
     except Exception:
-        sock.close()
-        return None  # اگر از گیت‌هاب نتونه سریع وصل شه، تو ایران فاجعه است!
+        if sock:
+            sock.close()
+        return None  # اگر نتونه سریع وصل شه، تو ایران کارایی نداره
 
-    # ۶. بررسی زنده بودن TLS (غیر از Reality چون ریالیتی به کلاینت‌های غیرمجاز جواب نمیده)
+    # ۶. بررسی زنده بودن TLS (غیر از Reality)
     if tls == "tls" and protocol != "trojan": 
         try:
             target_sni = sni if sni else host
@@ -188,8 +160,12 @@ def evaluate_node_vitality(config: dict) -> dict | None:
                 if not ss.cipher():
                     return None
         except Exception:
-            sock.close()
             return None
+        finally:
+            try:
+                sock.close()
+            except Exception:
+                pass
     else:
         try:
             sock.close()
@@ -223,8 +199,6 @@ class TestEndpoint(NamedTuple):
     statuses: tuple[int, ...]
 
 
-# One endpoint per round, rotating, so a node has to satisfy three independent
-# operators rather than the same target three times.
 TEST_ENDPOINTS: tuple[TestEndpoint, ...] = (
     TestEndpoint("cp.cloudflare.com", "/generate_204", (204,)),
     TestEndpoint("www.gstatic.com", "/generate_204", (204,)),
@@ -260,7 +234,8 @@ def _node_to_outbound(node: Any, tag: str) -> dict:
         parsed = urlparse(raw_link)
         query = parse_qs(parsed.query)
 
-        GAPGPTMASKTOKENpoyk4ak93ihX0X = parsed.username or node.get("id", "")
+        user_id = parsed.username or node.get("id") or node.get("uuid", "")
+        user_password = parsed.password or node.get("password") or user_id
         sni = query.get("sni", [node.get("sni", "")])[0]
         security = query.get("security", [node.get("tls", "none")])[0].lower()
         net = query.get("type", [node.get("network", "tcp")])[0].lower()
@@ -283,7 +258,7 @@ def _node_to_outbound(node: Any, tag: str) -> dict:
                     "address": host,
                     "port": port,
                     "users": [{
-                        "id": GAPGPTMASKTOKENpoyk4ak93ihX1X,
+                        "id": user_id,
                         "encryption": query.get("encryption", ["none"])[0],
                         "flow": query.get("flow", [""])[0]
                     }]
@@ -295,7 +270,7 @@ def _node_to_outbound(node: Any, tag: str) -> dict:
                     "address": host,
                     "port": port,
                     "users": [{
-                        "id": GAPGPTMASKTOKENpoyk4ak93ihX2X,
+                        "id": user_id,
                         "alterId": 0,
                         "security": "auto"
                     }]
@@ -306,7 +281,7 @@ def _node_to_outbound(node: Any, tag: str) -> dict:
                 "servers": [{
                     "address": host,
                     "port": port,
-                    "password": GAPGPTMASKTOKENpoyk4ak93ihX3X
+                    "password": user_password
                 }]
             }
         elif protocol == "shadowsocks":
@@ -316,7 +291,7 @@ def _node_to_outbound(node: Any, tag: str) -> dict:
                     "address": host,
                     "port": port,
                     "method": method,
-                    "password": GAPGPTMASKTOKENpoyk4ak93ihX4X
+                    "password": user_password
                 }]
             }
 
@@ -353,8 +328,6 @@ def _node_to_outbound(node: Any, tag: str) -> dict:
 
 def _build_config(batch: list[Any], ports: list[int]) -> dict:
     inbounds: list[dict] = []
-    # The blackhole is listed first so it is Xray's default outbound: anything
-    # not matched by an explicit rule is dropped rather than sent out directly.
     outbounds: list[dict] = [{"tag": "block", "protocol": "blackhole"}]
     rules: list[dict] = []
 
@@ -428,6 +401,12 @@ def _config_accepted(xray: str, config: dict, directory: str) -> bool:
         )
     except subprocess.TimeoutExpired:
         return False
+    finally:
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
     return result.returncode == 0
 
 
@@ -480,7 +459,7 @@ def preflight(xray: str) -> list[str]:
         return [f"running '{xray} version' failed: {error}"]
     if version.returncode != 0:
         return [f"'{xray} version' exited {version.returncode}"]
-    print(f"  core: {version.stdout.decode('utf-8', 'replace').splitlines()[0]}")
+    print(f"   core: {version.stdout.decode('utf-8', 'replace').splitlines()[0]}")
 
     failures: list[str] = []
     with tempfile.TemporaryDirectory(prefix="xray-preflight-") as directory:
@@ -692,12 +671,10 @@ def check(
     filtered_nodes: list[Any] = []
     for node in nodes:
         if isinstance(node, dict):
-            # اگر دیتای ورودی دیکشنری باشد از چک‌های اولیه عبور می‌کند
             valid = evaluate_node_vitality(node)
             if valid is not None:
                 filtered_nodes.append(node)
         elif hasattr(node, "params"):
-            # اگر آبجکت Node باشد
             host = getattr(node, "address", "")
             sni = node.params.get("sni", host)
             raw = getattr(node, "to_link", lambda: "")()
@@ -765,6 +742,8 @@ def check(
 
     # سیستم امتیازدهی و رتبه‌بندی نهایی هوشمند با لحاظ کردن پایداری پروتکل‌ها در ایران
     def calculate_score(idx: int) -> float:
+        if not latencies[idx]:
+            return 9999.0
         med = statistics.median(latencies[idx])
         item = accepted[idx]
         score = med
@@ -788,10 +767,17 @@ def check(
                 score += 150
         return score
 
-    ordered = sorted(survivors, key=lambda i: (calculate_score(i), statistics.median(latencies[i]), i))
+    ordered = sorted(
+        survivors,
+        key=lambda i: (
+            calculate_score(i),
+            statistics.median(latencies[i]) if latencies[i] else 9999.0,
+            i
+        )
+    )
     
     for index in ordered:
-        med_lat = round(statistics.median(latencies[index]))
+        med_lat = round(statistics.median(latencies[index])) if latencies[index] else 0
         if isinstance(accepted[index], dict):
             accepted[index]["latency"] = med_lat
             accepted[index]["score"] = calculate_score(index)
