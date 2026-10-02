@@ -297,43 +297,77 @@ def attach_country_codes(nodes: list):
         node["country"] = host_to_country.get(node["host"], "OTHER")
 
 # ------------------------------------------------------------------------------
-# ۶. ماژول تلگرام (پستچی اختصاصی شما) 💌
+# ۶. ماژول شیک‌پوش و حرفه‌ای تلگرام (مخصوص ارسال لینک‌های سابسکریپشن) 💌
 # ------------------------------------------------------------------------------
 
-def send_telegram_alert(message: str, top_file_path: str = None):
-    """
-    خواندن توکن‌ها از سکرت‌های محیطی گیت‌هاب اکشنز (پشتیبانی از هر دو نامی که ست کردید)
-    """
+def send_telegram_alert(raw_count: int, alive_count: int, elite_count: int, top_file_path: str = None):
     token = os.getenv("TELEGRAM_TOKEN") or os.getenv("TG_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHANNEL") or os.getenv("TG_CHANNEL_ID")
     
     if not token or not chat_id:
-        print("⚠️ Telegram credentials (TOKEN/CHANNEL_ID) not found in env! Cannot send message.")
+        print("⚠️ سکرت‌های تلگرام پیدا نشدند!")
         return
 
-    print("📬 Dispatching alert to Telegram...")
-    
-    text_url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "Markdown"
-    }
-    try:
-        requests.post(text_url, json=payload, timeout=8)
-    except Exception as e:
-        print(f"❌ Text send failed: {e}")
+    # آدرس ریپازیتوری شما
+    REPO_NAME = "mmkeshavarzz/v2ray-configs"
+    BRANCH = "main"
 
+    # ساخت لینک‌های آماده کپی برای کلاینت‌ها
+    raw_sub_url = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/sub.txt"
+    raw_top100_url = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/top100.txt"
+    cdn_top100_url = f"https://cdn.jsdelivr.net/gh/{REPO_NAME}@{BRANCH}/top100.txt"
+    
+    # پروتکل‌ها
+    vless_sub = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/protocols/vless.txt"
+
+    # پیام ژورنالیستی و تر و تمیز برای کانال
+    subscription_message = (
+        "🌟 *بروزرسانی جدید کانفیگ‌های ضد زامبی (Top 100)*\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📊 *آمار پالایش و تست هوشمند:*\n"
+        f"▫️ کل مخزن ورودی: `{raw_count}`\n"
+        f"▫️ عبور کرده از دیوار آتش: `{alive_count}`\n"
+        f"▫️ الیت‌های تست‌شده با پینگ ایران: `{elite_count}`\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        "🔗 *لینک‌های سابسکریپشن هوشمند (کافیه لمس کنی تا کپی بشن):*\n\n"
+        "🚀 *لینک اصلی مخزن (Top 100):*\n"
+        f"`{raw_top100_url}`\n\n"
+        "⚡ *لینک جایگزین با CDN پرسرعت (jsDelivr):*\n"
+        f"`{cdn_top100_url}`\n\n"
+        "💎 *فقط پروتکل VLESS:*\n"
+        f"`{vless_sub}`\n\n"
+        "📦 *تمام سرورهای فعال (Sub Full):*\n"
+        f"`{raw_sub_url}`\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━\n"
+        "💡 *راهنمای استفاده:* \n"
+        "لینک بالا رو کپی کنید، وارد برنامه (v2rayNG / Happ / Streisand) بشید، از بخش Subscription Groups علامت ➕ رو بزنید و لینک رو پیست کنید! 🔄"
+    )
+
+    print("📬 در حال ارسال لینک‌های شیک سابسکریپشن به تلگرام...")
+    
+    # ۱. ارسال متن سابسکریپشن
+    try:
+        text_url = f"https://api.telegram.org/bot{token}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": subscription_message,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
+        }
+        requests.post(text_url, json=payload, timeout=10)
+    except Exception as e:
+        print(f"❌ خطا در ارسال پیام متنی: {e}")
+
+    # ۲. ارسال فایل فقط به عنوان زاپاس (اختیاری)
     if top_file_path and os.path.exists(top_file_path):
-        doc_url = f"https://api.telegram.org/bot{token}/sendDocument"
         try:
+            doc_url = f"https://api.telegram.org/bot{token}/sendDocument"
             with open(top_file_path, "rb") as doc:
                 files = {"document": (os.path.basename(top_file_path), doc)}
-                data = {"chat_id": chat_id, "caption": "🚀 فایل کانفیگ‌های داغ و تست‌شده Top 100!"}
-                requests.post(doc_url, data=data, files=files, timeout=12)
-            print("✅ Telegram Document Sent Successfully!")
-        except Exception as e:
-            print(f"❌ Document send failed: {e}")
+                data = {"chat_id": chat_id, "caption": "📁 اینم بک‌آپ فایل خام اگه یه موقع لینک باز نشد!"}
+                requests.post(doc_url, data=data, files=files, timeout=15)
+        except Exception:
+            pass
 
 # ------------------------------------------------------------------------------
 # ۷. تابع اصلی و قلب تپنده اسکریپت
@@ -436,7 +470,13 @@ def main():
         f"🇮🇷 گلچین نهایی (Top 100): `{len(verified_top100)}`\n\n"
         "✨ فایل کانفیگ پیوست شد 👇"
     )
-    send_telegram_alert(summary_msg, "top100.txt")
+        # ارسال شیک و مجلسی لینک‌ها به تلگرام
+    send_telegram_alert(
+        raw_count=len(raw_candidates),
+        alive_count=len(alive_pool),
+        elite_count=len(verified_top100),
+        top_file_path="top100.txt" # اگه اصلاً فایل نمی‌خوای، اینو بذار None
+    )
 
     print("🏁 Processing finished successfully.")
 
