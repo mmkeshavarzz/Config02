@@ -3,24 +3,20 @@ import time
 import socket
 from urllib.parse import urlparse, parse_qs
 
-GLOBAL_SOCKET_TIMEOUT = 1.2
-TLS_PROBE_TIMEOUT = 1.5
+# سروری که از دیتاسنتر گیت‌هاب بیش از ۰.۸ ثانیه طول بکشه، توی ایران عملاً مرده‌ست!
+MAX_ACCEPTABLE_TCP_LATENCY = 0.8  
 
-BLOCKED_RANGES = (
-    "172.64.", "172.65.", "172.66.", "172.67.",
-    "104.16.", "104.17.", "104.18.", "104.19.", "104.20.",
-    "104.21.", "104.22.", "104.23.", "104.24.", "104.25.", "104.26.",
-    "104.27.", "104.28.", "188.114.96.", "188.114.97.", "188.114.98.",
-    "188.114.99.", "198.41.128.", "198.41.129.", "199.232.",
-    "127.", "10.", "192.168.", "0.", "169.254."
+BLOCKED_IP_PREFIXES = (
+    "127.", "10.", "192.168.", "0.", "169.254.", "255."
 )
 
-INVALID_SNI_HOSTS = {
-    "127.0.0.1", "localhost", "example.com", "google.com",
-    "speedtest.net", "cloudflare.com", "fast.com", "yahoo.com"
+# دامنه‌های زباله و سوخته
+TRASH_SNI_HOSTS = {
+    "127.0.0.1", "localhost", "example.com", "test.com"
 }
 
-def parse_and_verify_reality_parameters(raw_link: str) -> bool:
+def validate_reality_config(raw_link: str) -> bool:
+    """بررسی تخصصی پارامترهای Reality برای اطمینان از اصالت کانفیگ"""
     try:
         parsed = urlparse(raw_link)
         q = parse_qs(parsed.query)
@@ -28,19 +24,13 @@ def parse_and_verify_reality_parameters(raw_link: str) -> bool:
         if sec == "reality":
             pbk = q.get("pbk", [""])[0]
             sni = q.get("sni", [""])[0]
-            if not pbk or not sni or len(pbk) < 40 or sni in INVALID_SNI_HOSTS:
+            fp = q.get("fp", ["chrome"])[0]
+            # کلید عمومی و اس‌ان‌آی برای ریالیتی الزامی و حیاتی هستند
+            if not pbk or len(pbk) < 35 or not sni or sni in TRASH_SNI_HOSTS:
                 return False
         return True
     except Exception:
         return False
-
-def is_cloudflare_or_blocked_cdn(host: str, ip: str) -> bool:
-    if any(ip.startswith(bad) for bad in BLOCKED_RANGES):
-        return True
-    h = host.lower()
-    if "workers.dev" in h or "pages.dev" in h or "cloudflare" in h:
-        return True
-    return False
 
 def evaluate_node_vitality(config: dict) -> dict:
     if not config:
@@ -52,26 +42,34 @@ def evaluate_node_vitality(config: dict) -> dict:
     sni = config.get("sni", "").strip()
     tls = config.get("tls", "none").lower()
     protocol = config.get("protocol", "").lower()
-    net_type = config.get("network", "tcp").lower()
 
-    if port not in [443, 8443, 2053, 2083, 2087, 2096, 80, 8080, 8880, 2052, 2082, 2086, 2095]:
-        return None
-
-    if tls == "reality" and not parse_and_verify_reality_parameters(raw_link):
-        return None
-
-    if sni and (sni in INVALID_SNI_HOSTS or sni.startswith("104.") or sni.startswith("172.")):
-        return None
-
+    # ۱. اعتبارسنجی اولیه پورت
     try:
-        ip = socket.gethostbyname(host)
-        if is_cloudflare_or_blocked_cdn(host, ip):
+        port = int(port)
+        if port <= 0 or port > 65535:
             return None
     except Exception:
         return None
 
+    # ۲. فیلتر کردن ریالیتی‌های فیک یا ناقص
+    if tls == "reality" and not validate_reality_config(raw_link):
+        return None
+
+    # ۳. فیلتر SNI نامعتبر
+    if sni and sni in TRASH_SNI_HOSTS:
+        return None
+
+    # ۴. ریزالو DNS و حذف IPهای لوکال
+    try:
+        ip = socket.gethostbyname(host)
+        if any(ip.startswith(prefix) for prefix in BLOCKED_IP_PREFIXES):
+            return None
+    except Exception:
+        return None
+
+    # ۵. تست اتصال واقعی TCP با سخت‌گیری بالا
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(GLOBAL_SOCKET_TIMEOUT)
+    sock.settimeout(MAX_ACCEPTABLE_TCP_LATENCY)
     start_time = time.perf_counter()
 
     try:
@@ -81,50 +79,40 @@ def evaluate_node_vitality(config: dict) -> dict:
         sock.close()
         return None
 
-    if tls in ["tls", "reality"] or port in [443, 8443, 2053, 2083, 2087, 2096]:
+    # اگر پورت TLS عادی بود (غیر Reality)، هندشیک سریع برای تست
+    if tls == "tls" and port in [443, 8443, 2053, 2083, 2087, 2096]:
         try:
-            target_sni = sni if (sni and not sni.replace(".", "").isdigit()) else host
+            target_sni = sni if sni else host
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
-            try:
-                ctx.set_alpn_protocols(['h2', 'http/1.1'])
-            except Exception:
-                pass
-
-            sock.settimeout(TLS_PROBE_TIMEOUT)
+            sock.settimeout(0.8)
             with ctx.wrap_socket(sock, server_hostname=target_sni) as ss:
                 if not ss.cipher():
                     return None
-                
-                if net_type in ["ws", "http"]:
-                    probe_payload = f"HEAD / HTTP/1.1\r\nHost: {target_sni}\r\nUser-Agent: Mozilla/5.0\r\nConnection: close\r\n\r\n"
-                    ss.sendall(probe_payload.encode())
-                    data = ss.recv(64)
-                    if not data:
-                        return None
         except Exception:
             sock.close()
             return None
     else:
+        # برای ریالیتی یا سایر موارد صرفاً اتصال باز سوکت تایید شد
         try:
-            sock.sendall(b"\x05\x01\x00")
             sock.close()
         except Exception:
-            sock.close()
-            return None
+            pass
 
     config["latency"] = latency
 
+    # سیستم امتیازدهی دقیق:
+    # اولویت بالا به Reality و Vless با کمترین پینگ
     score = latency
     if tls == "reality":
-        score -= 400
+        score -= 250
     elif protocol == "vless":
-        score -= 200
+        score -= 150
     elif protocol == "trojan":
-        score -= 100
+        score -= 80
     elif protocol == "vmess":
-        score += 50
+        score += 80
 
     config["score"] = score
     return config
