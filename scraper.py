@@ -2,12 +2,13 @@
 =============================================================================
 *  Project: Config Hunter & Auto Categorizer (Turbine Style) + Telegram Bot
 *  Author: mm.keshavarz | Cleaned, Supercharged & Enterprise-Ready by Senior AI
+*  Fixes: Anti-Crash System against "label too long" & malformed hostnames 🛡️
 *  Features:
 *    - Multi-threaded TCP Ping & Handshake latency tester (STRICT MODE)
 *    - Protocol separation (VLESS, VMess, Trojan, Shadowsocks)
 *    - BATCH GeoIP lookup (No more rate-limits from ip-api!)
-*    - Private/Bogon IP Filtering
-*    - 🚀 Auto-Broadcast to Telegram with Fastly Sub Links
+*    - Private/Bogon/Malformed IP Filtering 🚀
+*    - Auto-Broadcast to Telegram with Fastly Sub Links
 =============================================================================
 """
 
@@ -48,8 +49,8 @@ HEADERS = {
 }
 
 REGEX_PATTERN = r'''(vmess://[^\s<"']+|vless://[^\s<"']+|ss://[^\s<"']+|trojan://[^\s<"']+)'''
-MAX_TIMEOUT = 2.0  # سخت‌گیری بیشتر: اگر بالای 2 ثانیه طول کشید، بندازش دور!
-MAX_WORKERS = 30   # تعداد ورکرها تنظیم شد تا سیستم کرش نکند
+MAX_TIMEOUT = 2.0  # سخت‌گیری بیشتر
+MAX_WORKERS = 30   
 
 # =============================================================================
 #  پارس کانفیگ‌ها (بهبود یافته)
@@ -86,9 +87,21 @@ def parse_config(config_str: str):
     return None
 
 # =============================================================================
-#  فیلتر آی‌پی‌های پرایوت و فیک (جدید 🚀)
+#  فیلتر آی‌پی‌های پرایوت و فیک + ضد کرش (جدید 🚀)
 # =============================================================================
 def is_public_ip(ip_or_host: str) -> bool:
+    # 1. اگر رشته خالی بود یا خیلی طولانی بود (جلوگیری از خطای label too long) درجا ردش کن!
+    if not ip_or_host or len(ip_or_host) > 253:
+        return False
+    
+    # 2. بررسی طول تک‌تک بخش‌های دامنه (هیچ بخشی نباید بالای 63 کاراکتر باشه)
+    try:
+        for part in ip_or_host.split('.'):
+            if len(part) > 63:
+                return False
+    except Exception:
+        return False
+
     try:
         ip = socket.gethostbyname(ip_or_host)
         # مسدود کردن رنج‌های Private و Bogon
@@ -97,7 +110,7 @@ def is_public_ip(ip_or_host: str) -> bool:
             second_octet = int(ip.split('.')[1])
             if 16 <= second_octet <= 31: return False
         return True
-    except socket.gaierror:
+    except Exception: # شکار تمامی خطاها از جمله socket.gaierror و UnicodeError
         return False
 
 # =============================================================================
@@ -109,21 +122,19 @@ def check_alive_and_ping(config_data):
     
     host, port = config_data["host"], config_data["port"]
     
-    # اگه آی‌پی لوکال بود، همونجا شوتش کن بیرون!
+    # فیلتر دامنه و آی‌پی سالم (ضد کرش)
     if not is_public_ip(host):
         return None
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(MAX_TIMEOUT)
     
-    # استفاده از perf_counter برای محاسبه زمان دقیق در سطح میلی‌ثانیه
     start_time = time.perf_counter()
     try:
         sock.connect((host, port))
         latency = round((time.perf_counter() - start_time) * 1000, 2)
         sock.close()
         
-        # اگر پینگ غیرمنطقی بود ردش کن
         if latency > (MAX_TIMEOUT * 1000):
             return None
             
@@ -144,16 +155,17 @@ def enrich_configs_with_countries(configs):
     for c in configs:
         host = c["host"]
         try:
-            ip = socket.gethostbyname(host)
-            host_to_ip[host] = ip
-            unique_ips.add(ip)
+            # اینجا هم طول رو چک می‌کنیم محض احتیاط
+            if host and len(host) <= 253:
+                ip = socket.gethostbyname(host)
+                host_to_ip[host] = ip
+                unique_ips.add(ip)
         except Exception:
             pass
 
     ip_list = list(unique_ips)
     ip_to_country = {}
     
-    # ارسال صدتا صدتا ریکوئست به جای دونه‌دونه (نجات از Rate Limit)
     for i in range(0, len(ip_list), 100):
         chunk = ip_list[i:i+100]
         try:
@@ -166,7 +178,6 @@ def enrich_configs_with_countries(configs):
         except Exception as e:
             print(f"⚠️ خطای موقت در دریافت لوکیشن: {e}")
             
-    # اختصاص کشورها به کانفیگ‌ها
     for c in configs:
         ip = host_to_ip.get(c["host"])
         c["country"] = ip_to_country.get(ip, "OTHER")
@@ -217,7 +228,6 @@ def main():
     print("🕵️‍♂️ در حال نفوذ به کانال‌های تلگرامی برای استخراج کانفیگ...")
     raw_configs = []
     
-    # واکشی سریع‌تر با کانکشن پولینگ
     with requests.Session() as session:
         session.headers.update(HEADERS)
         for ch in CHANNELS:
@@ -247,10 +257,8 @@ def main():
 
     print(f"✅ تعداد {len(alive_configs)} کانفیگ زنده از فیلتر عبور کردند.")
     
-    # مرتب‌سازی بر اساس پینگ (سریع‌ترین‌ها اول)
     alive_configs.sort(key=lambda x: x.get("ping", 9999))
     
-    # پیدا کردن کشورها با سیستم فوق سریع Batch
     enrich_configs_with_countries(alive_configs)
 
     os.makedirs("protocols", exist_ok=True)
@@ -267,19 +275,17 @@ def main():
         if cc not in country_buckets: country_buckets[cc] = []
         country_buckets[cc].append(item["raw"])
 
-    # ذخیره پروتکل‌ها
     for proto, items in protocol_buckets.items():
         if items:
             with open(f"protocols/{proto}.txt", "w", encoding="utf-8") as f:
                 f.write(base64.b64encode(("\n".join(items)).encode("utf-8")).decode("utf-8"))
 
-    # ذخیره کشورها و ارسال به تلگرام
     for cc, items in country_buckets.items():
         if items:
             with open(f"countries/{cc}.txt", "w", encoding="utf-8") as f:
                 f.write(base64.b64encode(("\n".join(items)).encode("utf-8")).decode("utf-8"))
             send_to_telegram(cc, items)
-            time.sleep(1.5) # نفس‌گیری تلگرام برای جلوگیری از Flood Limit
+            time.sleep(1.5) 
 
     final_b64 = base64.b64encode(("\n".join([x["raw"] for x in alive_configs])).encode("utf-8")).decode("utf-8")
     with open("sub.txt", "w", encoding="utf-8") as f:
@@ -298,4 +304,5 @@ if __name__ == "__main__":
 # مسیریابی است تا ساختار پروژه برای مقیاس‌های بسیار بزرگ پایدار بماند.
 ENTERPRISE_ROUTING_POLICIES = [
     "domain:v2ray.com,domain:github.com,domain:google.com,domain:cloudflare.com,domain:aws.amazon.com,domain:bing.com,domain:microsoft.com,domain:apple.com,domain:netflix.com,domain:spotify.com,domain:yahoo.com,domain:wikipedia.org,domain:reddit.com,domain:instagram.com,domain:facebook.com,domain:twitter.com,domain:linkedin.com,domain:twitch.tv,domain:discord.com,domain:zoom.us,domain:slack.com,domain:telegram.org,domain:whatsapp.com,domain:pinterest.com,domain:tiktok.com,"
+    
 ]
