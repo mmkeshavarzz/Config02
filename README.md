@@ -1,144 +1,151 @@
+<!--
+  v2ray-configs — repository landing page
+  Before publishing: replace YOUR_GITHUB_USERNAME / YOUR_TELEGRAM_CHANNEL,
+  confirm the generated subscription filenames, and add the assets noted below.
+-->
+
 <div align="center">
 
-# ⚡ Free V2Ray Configs Aggregator
+# 🌐 v2ray-configs
 
-**کانفیگ‌های رایگان، سالم و تست‌شده V2ray / Xray / Clash / Sing-Box — به‌روزرسانی خودکار هر ۱۵ دقیقه**
+### A curated, continuously checked index of community-provided connection configurations.
 
-![Pipeline Status](https://img.shields.io/badge/PIPELINE-PASSING-brightgreen?style=for-the-badge&logo=githubactions)
-![Auto Update](https://img.shields.io/badge/AUTO--UPDATE-EVERY%2015%20MIN-blue?style=for-the-badge)
-![Telegram Channel](https://img.shields.io/badge/TELEGRAM-JOIN%20CHANNEL-26A5E4?style=for-the-badge&logo=telegram)
-![GitHub Stars](https://img.shields.io/github/stars/mmkeshavarzz/v2ray-configs?style=for-the-badge&color=gold)
+<!-- Replace this placeholder with the project’s original hero artwork. -->
+<picture>
+  <img src="assets/readme-hero.png" alt="v2ray-configs — curated connections, clear status, simple subscriptions" width="900">
+</picture>
 
-<br/>
+<br>
 
-### 📊 آمار زنده کانفیگ‌ها (Live Counters)
-![Total Configs](https://img.shields.io/badge/CONFIGS-10000%2B-blue?style=flat-square)
-![Verified](https://img.shields.io/badge/VERIFIED-PASSING-success?style=flat-square)
-![Fast](https://img.shields.io/badge/FAST-%3C800ms-orange?style=flat-square)
-![Secure](https://img.shields.io/badge/SECURE-TLS%20ONLY-purple?style=flat-square)
-![Updated](https://img.shields.io/badge/UPDATED-TODAY-brightgreen?style=flat-square)
+[![CI pipeline](https://github.com/YOUR_GITHUB_USERNAME/v2ray-configs/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/v2ray-configs/actions/workflows/ci.yml)
+[![Auto-update](https://img.shields.io/badge/auto--update-enabled-29a36a?logo=dependabot&logoColor=white)](#architecture)
+[![GitHub stars](https://img.shields.io/github/stars/YOUR_GITHUB_USERNAME/v2ray-configs?style=flat&logo=github&label=stars)](https://github.com/YOUR_GITHUB_USERNAME/v2ray-configs/stargazers)
+[![Telegram](https://img.shields.io/badge/Telegram-community-26A5E4?logo=telegram&logoColor=white)](https://t.me/YOUR_TELEGRAM_CHANNEL)
+[![Dashboard](https://img.shields.io/badge/dashboard-live-6857d5?logo=githubpages)](https://YOUR_GITHUB_USERNAME.github.io/v2ray-configs/)
 
----
+<!-- Live values are read from the repository's JSON data files via Shields.io. -->
+[![Total indexed configs](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FYOUR_GITHUB_USERNAME%2Fv2ray-configs%2Fmain%2Findex.json&query=%24.total&label=indexed%20configs&color=5470c6&logo=serverfault)](index.json)
+[![Currently healthy](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FYOUR_GITHUB_USERNAME%2Fv2ray-configs%2Fmain%2Fhealth.json&query=%24.online&label=healthy%20now&color=2e9d68&logo=activity)](health.json)
+[![Last health check](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FYOUR_GITHUB_USERNAME%2Fv2ray-configs%2Fmain%2Fhealth.json&query=%24.checked_at&label=last%20check&color=718096)](health.json)
 
-🌐 **زبان‌ها / Languages:**  
-[فارسی](README.md) | [English](README_EN.md) | [中文](README_ZH.md)
+**[⚡ Get the Top 100](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/v2ray-configs/main/top100.txt)** · **[📊 Open dashboard](https://YOUR_GITHUB_USERNAME.github.io/v2ray-configs/)** · **[💬 Join Telegram](https://t.me/YOUR_TELEGRAM_CHANNEL)** · **[⭐ Star this project](https://github.com/YOUR_GITHUB_USERNAME/v2ray-configs)**
+
+[🇬🇧 English](README.md) · [🇮🇷 فارسی](README_FA.md) · [🇷🇺 Русский](README_RU.md) · [🇨🇳 中文](README_ZH.md)
 
 </div>
 
 ---
 
-## 🚀 شروع سریع — کپی لینک سابسکرایپشن
+## 👋 What is this repository?
 
-برای دریافت سریع‌ترین کانفیگ‌های تست‌شده، یکی از لینک‌های زیر را کپی کرده و در نرم‌افزار خود (v2rayNG, Hiddify, NekoBox, MahsaNG و ...) وارد کنید:
+`v2ray-configs` organizes community-submitted V2Ray-compatible connection profiles and publishes subscription files for supported clients. The project aims to make discovery easier by applying automated checks and separating results into useful quality tiers.
 
-### 🏆 لیست ۱۰۰ کانفیگ برتر (پیشنهاد ویژه - کمترین پینگ)
-```text
-[https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/top100.txt](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/top100.txt)
+A **subscription link** is a URL you add to a compatible client. The client downloads the current list from that URL; when the list is refreshed, you do not need to import every profile one by one. Availability and compatibility can change, so a passing check is only a point-in-time signal—not a promise of uptime, speed, security, or access in every region.
 
-```
+> **Use responsibly.** Follow the laws and network policies that apply to you. Configurations are community-provided and may route traffic through third-party operators. Do not use an untrusted profile for sensitive activity. This project does not operate or endorse every server in its index.
 
-### 🛡️ لیست کامل کانفیگ‌های تاییدشده (Verified Base64)
+## 🚀 Quick start
 
-```text
-[https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs_base64.txt](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs_base64.txt)
+1. Install a V2Ray-compatible client for your platform, such as v2rayNG, V2RayN, or a client that supports standard subscription URLs.
+2. Copy the subscription URL below.
+3. In your client, choose **Add subscription / Import from URL**, paste the link, then update the subscription and select a profile.
 
-```
-
----
-
-## 📱 اسکن سریع با موبایل (QR Code)
-
-اگر از گوشی استفاده می‌کنید، کافیست دوربین بخش Scan برنامه‌‌تان را روی یکی از کدهای QR زیر بگیرید:
-
-| Top 100 (سریع‌ترین‌ها) | Verified (تست‌شده) | کانال تلگرام |
-| --- | --- | --- |
-|  |  |  |
-
----
-
-## 📊 انتخاب سطح و فرمت دلخواه (Choose a Tier)
-
-کانفیگ‌ها پس از تست سلامت در ۵ سطح دسته‌بندی می‌شوند. خروجی متناسب با کلاینت خود را انتخاب کنید:
-
-| دسته (Tier) | توضیحات | Plain (.txt) | Base64 (.txt) | Clash (.yaml) | Sing-box (.json) |
-| --- | --- | --- | --- | --- | --- |
-| 🏆 **verified** | پاس‌شده در ۳ مرحله تست واقعی | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs.txt) | [b64](https://www.google.com/url?sa=E&source=gmail&q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/singbox.json) |
-| ⚡ **fast** | تست‌شده + پینگ میانه زیر ۸۰۰ms | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/configs.txt) | [b64](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/singbox.json) |
-| 🔒 **secure** | دارای TLS معتبر و Forward Secrecy | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/configs.txt) | [b64](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/singbox.json) |
-| 🌐 **all** | تمام کانفیگ‌های جمع‌آوری‌شده و حذف تکراری | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/configs.txt) | [b64](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/singbox.json) |
-
----
-
-## 🎯 تفکیک بر اساس پروتکل (Per-Protocol Links)
-
-اگر نرم‌افزار شما فقط از پروتکل‌های خاصی پشتیبانی می‌کند، می‌توانید مستقیماً سابسکرایپشن همان پروتکل را دریافت کنید:
-
-| پروتکل | Plain Text | Base64 Subscription |
-| --- | --- | --- |
-| **VLESS** | `.../main/protocols/vless.txt` | `.../main/protocols/vless_base64.txt` |
-| **VMess** | `.../main/protocols/vmess.txt` | `.../main/protocols/vmess_base64.txt` |
-| **Trojan** | `.../main/protocols/trojan.txt` | `.../main/protocols/trojan_base64.txt` |
-| **Shadowsocks** | `.../main/protocols/shadowsocks.txt` | `.../main/protocols/shadowsocks_base64.txt` |
-| **Hysteria2** | `.../main/protocols/hysteria2.txt` | `.../main/protocols/hysteria2_base64.txt` |
-| **TUIC** | `.../main/protocols/tuic.txt` | `.../main/protocols/tuic_base64.txt` |
-
----
-
-## 💎 لینک‌های آینه‌ای (Mirror Links - jsDelivr)
-
-در صورتی که دامنه `raw.githubusercontent.com` روی اپراتور شما مسدود باشد، کافیست عبارت `https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main` را با آدرس زیر جایگزین نمایید:
+### Top 100 subscription
 
 ```text
-[https://cdn.jsdelivr.net/gh/mmkeshavarzz/v2ray-configs@main/verified/configs_base64.txt](https://cdn.jsdelivr.net/gh/mmkeshavarzz/v2ray-configs@main/verified/configs_base64.txt)
-
+https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/v2ray-configs/main/top100.txt
 ```
 
----
+[**⚡ Open or copy top100.txt**](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/v2ray-configs/main/top100.txt)
 
-## 🧪 فرآیند صحت‌سنجی و تست سلامت (How it Works)
+The Top 100 list is a convenience selection from the repository’s current eligible results. Ranking and availability may change after each update. If your client cannot import the list, check the client’s expected subscription format and try the matching format in the tier table below.
 
-بخش زیادی از کانفیگ‌های رایگان در اینترنت از کار افتاده‌اند. اسکریپت‌های اتومیشن این پروژه، تمام لینک‌ها را طی ۴ مرحله صحت‌سنجی پالایش می‌کنند:
+## 🧭 Subscription tiers
+
+Choose a list based on your priorities. These labels describe the repository’s filtering and selection policy; they are not guarantees of real-world performance or anonymity.
+
+| Tier | Intended for | Universal subscription (`.txt`) | JSON bundle (`.json`) | Clash-compatible (`.yaml`) |
+|---|---|---|---|---|
+| ✅ **Verified** | Profiles that pass the configured validation and health checks | [Open](subscriptions/verified.txt) | [Open](subscriptions/verified.json) | [Open](subscriptions/verified.yaml) |
+| ⚡ **Fast** | Profiles ranked highly by the latest measured response checks | [Open](subscriptions/fast.txt) | [Open](subscriptions/fast.json) | [Open](subscriptions/fast.yaml) |
+| 🛡️ **Secure** | Profiles meeting the project’s configured security-oriented rules | [Open](subscriptions/secure.txt) | [Open](subscriptions/secure.json) | [Open](subscriptions/secure.yaml) |
+| 🌍 **All** | The broadest available collection, including entries not in the focused tiers | [Open](subscriptions/all.txt) | [Open](subscriptions/all.json) | [Open](subscriptions/all.yaml) |
+
+> **Format note:** A `.txt` subscription is commonly Base64-encoded or a plain list of supported URIs, depending on the generator. JSON and Clash YAML are separate client formats, not interchangeable files. Keep only links for formats the publishing pipeline actually produces; update this table if output paths differ.
+
+## 📱 Scan to subscribe
+
+Scan the QR code with a compatible mobile client, or open the Top 100 link on your phone. The QR should encode the exact subscription URL above—not an individual server profile.
+
+<div align="center">
+
+<!-- Add the generated QR image here after the canonical URL is finalized. -->
+<img src="assets/qr/top100.png" alt="QR code for the Top 100 subscription URL" width="220" height="220">
+
+**Top 100 · mobile subscription**  
+[Open the subscription URL](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/v2ray-configs/main/top100.txt)
+
+</div>
+
+## 🧪 How filtering works
+
+The funnel progressively narrows the collection. Exact tests and thresholds should be kept in sync with the automation in this repository.
+
+| Stage | Name | What it means |
+|---|---|---|
+| **L0** | Intake | Collect candidate entries, normalize supported URI/config formats, and discard malformed or duplicate records. |
+| **L1** | Validation | Check required fields, supported protocols, parseability, and basic policy rules before a candidate enters the usable index. |
+| **L2** | Reachability | Run configured connection/health probes and record a timestamped result. A failed probe can also reflect temporary network conditions. |
+| **L3** | Ranking & publication | Apply tier rules, rank eligible entries where measurements exist, and generate the published subscription files and dashboard data. |
 
 ```text
-  [L0/L1: Collect & Clean] ➔ [L2: TCP Handshake] ➔ [L3: 3x Real HTTP Request] ➔ [Publish]
-
+Community sources → L0 intake → L1 validation → L2 health checks → L3 selection → subscriptions
 ```
 
-1. **L0 / L1 (Parse & Clean):** دریافت اطلاعات، اعتبارسنجی فرمت و حذف نمونه‌های تکراری (Deduplication).
+A profile may move between tiers—or disappear—when it fails a later run. Checks are automated signals, not a full security audit. The repository does not promise encryption beyond what the selected protocol provides, and a “secure” label must not be interpreted as an independent security certification.
 
-
-2. **L2 (TCP Dialing):** تست اتصال اولیه به پورت سرورها.
-
-
-3. **L3 (Real Request):** ارسال درخواست واقعی HTTP از طریق پروکسی در ۳ دور مجزا برای اطمینان از خروجی اینترنت واقعی.
-
-
-4. **Binary Validation:** چک کردن نهایی فایل‌های `.yaml` و `.json` توسط کلاینت‌های اصلی (`sing-box` و `mihomo`) قبل از انتشار.
-
-
-
----
-
-## 📂 ساختار ریپازیتوری (Repository Layout)
+## 🏗️ Architecture at a glance
 
 ```text
-.
-├── verified/       # کانفیگ‌های ۱۰۰٪ تست‌شده (txt, base64, clash, singbox)
-├── fast/           # کانفیگ‌های تست‌شده با پینگ زیر ۸۰۰ میلی‌ثانیه
-├── secure/         # کانفیگ‌های دارای رمزنگاری امن TLS
-├── all/            # تمام کانفیگ‌های یکپارچه‌سازی‌شده
-├── protocols/      # تفکیک کانفیگ‌ها بر اساس نوع پروتکل
-├── top100.txt      # ۱۰۰ کانفیگ برتر بر اساس سرعت
-└── README.md       # مستندات اصلی پروژه
-
+Sources
+  └─► Collector / normalizer
+        └─► L0–L1: deduplicate, parse, validate
+              └─► L2: scheduled health probes
+                    └─► L3: classify and rank
+                          ├─► top100.txt
+                          ├─► subscriptions/{verified,fast,secure,all}.{txt,json,yaml}
+                          ├─► index.json + health.json
+                          └─► dashboard
 ```
+
+- **Automation:** A scheduled workflow refreshes source data, performs configured checks, and publishes generated artifacts. See [Actions](https://github.com/YOUR_GITHUB_USERNAME/v2ray-configs/actions) for run history.
+- **Single source of truth:** `index.json` should expose the current aggregate count at `total`; `health.json` should expose the current healthy count at `online` and an ISO-8601 timestamp at `checked_at`.
+- **Live badges:** The Shields.io dynamic JSON badges above read those fields directly from the raw `main`-branch JSON files. Preserve this schema (or update the badge queries) when changing the data model. Public files must be accessible without authentication and valid JSON for the badges to render.
+- **Generated outputs:** Subscription files and dashboard data should be produced by the pipeline rather than edited by hand. Adjust the tier links if the actual output directory or filenames differ.
+- **Dashboard:** The badge points to GitHub Pages at `https://YOUR_GITHUB_USERNAME.github.io/v2ray-configs/`. Change it to the deployed dashboard URL if the project uses another host.
+
+## 🤝 Contribute
+
+Issues and pull requests are welcome. Useful contributions include improving parsers, making health checks more reliable, documenting supported clients, and reporting stale or malformed entries. Please do not submit credentials, private keys, personal data, or configurations you do not have permission to share.
+
+Before opening a pull request, describe the change, include reproduction steps for bugs, and avoid committing generated secrets or sensitive logs. Automated checks do not replace maintainer review.
+
+## 📌 Project links
+
+<div align="center">
+
+[⚡ **Top 100 subscription**](https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/v2ray-configs/main/top100.txt)　
+[📦 **All configurations**](subscriptions/all.txt)　
+[📊 **Dashboard**](https://YOUR_GITHUB_USERNAME.github.io/v2ray-configs/)　
+[💬 **Telegram**](https://t.me/YOUR_TELEGRAM_CHANNEL)　
+[⭐ **Star on GitHub**](https://github.com/YOUR_GITHUB_USERNAME/v2ray-configs/stargazers)
+
+</div>
 
 ---
 
-## 📜 Disclaimer
+<div align="center">
 
-این پروژه صرفاً برای اهداف آموزشی و تحقیقاتی توسعه یافته است. تمام پیکربندی‌ها از منابع عمومی اینترنت جمع‌آوری شده‌اند.
+Made for easier discovery—not guaranteed connectivity. **Stay curious, verify your sources, and use responsibly.**
 
-```
-
-```
+</div>
