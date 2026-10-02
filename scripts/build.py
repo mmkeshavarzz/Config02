@@ -3,20 +3,21 @@ import base64
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# وارد کردن توابع از ماژول‌های خودمون
+# ایمپورت توابع از سایر ماژول‌های پوشه scripts
 from nodes import harvest_raw_configs_from_sources
 from transform import parse_config_schema, attach_country_codes
 from healthcheck import evaluate_node_vitality
 
 WORKER_THREADS = 40
 TARGET_ELITE_COUNT = 100
+MAX_ACCEPTABLE_LATENCY_MS = 1200.0  # سقف مجاز تاخیر؛ بالاتر از این زباله‌دان تاریخ است!
 
 def send_telegram_alert(raw_count: int, alive_count: int, elite_count: int):
     token = os.getenv("TELEGRAM_TOKEN") or os.getenv("TG_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHANNEL") or os.getenv("TG_CHANNEL_ID")
     
     if not token or not chat_id:
-        print("⚠️ سکرت‌های تلگرام پیدا نشدند!")
+        print("⚠️ Telegram secrets not found. Skipping telegram notification.")
         return
 
     REPO_NAME = os.getenv("GITHUB_REPOSITORY", "mmkeshavarzz/v2ray-configs")
@@ -28,24 +29,24 @@ def send_telegram_alert(raw_count: int, alive_count: int, elite_count: int):
     raw_sub_url = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/sub.txt"
 
     subscription_message = (
-        "🌟 *بروزرسانی جدید کانفیگ‌های بدون قطعی (Top 100)*\n"
+        "🚀 *تصفیه‌خانه ضد زامبی: لیست تاپ 100 نخبگان*\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"📊 *آمار تصفیه‌خانه ضد زامبی:*\n"
+        f"📊 *گزارش فیلتراسیون عمیق:*\n"
         f"▫️ کل کانفیگ‌های شکارشده: `{raw_count}`\n"
-        f"▫️ عبور کرده از تست TLS: `{alive_count}`\n"
-        f"▫️ برترین نودهای گلچین‌شده: `{elite_count}`\n"
+        f"▫️ نجات‌یافتگان از تست سخت TLS: `{alive_count}`\n"
+        f"▫️ گلچین نهایی بدون پینگ منفی: `{elite_count}`\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "🔗 *لینک‌های سابسکریپشن هوشمند:*\n\n"
-        "🚀 *لینک مستقیم گیت‌هاب (Top 100):*\n"
-        f"`{raw_top100_url}`\n\n"
-        "⚡ *لینک ضدفیلتر (jsDelivr):*\n"
+        "🔗 *لینک‌های سابسکریپشن فعال:*\n\n"
+        "⚡ *لینک ضدفیلتر jsDelivr (پیشنهادی):*\n"
         f"`{cdn_top100_url}`\n\n"
-        "💎 *کانفیگ‌های اختصاصی VLESS:*\n"
+        "🛰️ *لینک مستقیم گیت‌هاب (Top 100):*\n"
+        f"`{raw_top100_url}`\n\n"
+        "💎 *اختصاصی VLESS Reality & TCP:*\n"
         f"`{vless_sub}`\n\n"
-        "📦 *مخزن جامع فعال (Sub Full):*\n"
+        "📦 *مخزن جامع فعال (Full Sub):*\n"
         f"`{raw_sub_url}`\n\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
-        "💡 *آموزش:* لینک‌ها را کپی کرده و در v2rayNG آپدیت کنید! 🚀"
+        "💡 *نکته:* هر ساعت به صورت خودکار بهینه‌سازی می‌شود. نوش جان! 🍹"
     )
 
     try:
@@ -58,11 +59,11 @@ def send_telegram_alert(raw_count: int, alive_count: int, elite_count: int):
         }
         requests.post(text_url, json=payload, timeout=10)
     except Exception as e:
-        print(f"❌ خطا در ارسال پیام تلگرام: {e}")
+        print(f"❌ Error sending telegram message: {e}")
 
 def main():
     print("=" * 65)
-    print("🚀 ANTI-ZOMBIE ENGINE (MODULAR): Starting Full Scan")
+    print("🚀 ANTI-ZOMBIE ENGINE (MODULAR): Starting Full Scan & Deep Filter")
     print("=" * 65)
 
     raw_candidates = harvest_raw_configs_from_sources()
@@ -84,25 +85,32 @@ def main():
 
     print(f"🛡️ Survived Real TLS Handshake: {len(alive_pool)}")
 
+    # 🛑 فیلتر مرگبار ضد زامبی: حذف نودهای با پینگ بالا یا مشکوک
+    alive_pool = [node for node in alive_pool if node.get("latency", 9999) < MAX_ACCEPTABLE_LATENCY_MS]
+    print(f"⚡ Filtered Nodes with Low Latency (<{int(MAX_ACCEPTABLE_LATENCY_MS)}ms): {len(alive_pool)}")
+
     if not alive_pool:
-        print("⚠️ Warning: No nodes survived.")
+        print("⚠️ Warning: No nodes survived the strict vitality check.")
         return
 
+    # مرتب‌سازی بر اساس امتیاز کیفی (Reality و Vless در صدر)
     alive_pool.sort(key=lambda x: x["score"])
     verified_top100 = alive_pool[:TARGET_ELITE_COUNT]
 
     print(f"🎯 Successfully Selected Elite Nodes: {len(verified_top100)}")
 
-    # تولید فایل‌های خروجی Base64
+    # ذخیره‌سازی داده‌ها با فرمت Base64
     def write_b64(filename, items):
         content = "\n".join([x["raw"] for x in items])
         with open(filename, "w", encoding="utf-8") as f:
             f.write(base64.b64encode(content.encode("utf-8")).decode("utf-8"))
 
+    # نوشتن فایل‌های ریشه
     write_b64("top100.txt", verified_top100)
     write_b64("top10.txt", verified_top100[:10])
     write_b64("sub.txt", alive_pool)
 
+    # تفکیک کشوری و پروتکلی
     attach_country_codes(alive_pool)
     os.makedirs("protocols", exist_ok=True)
     os.makedirs("countries", exist_ok=True)
@@ -128,8 +136,9 @@ def main():
         if items:
             write_b64(f"countries/{c_code}.txt", items)
 
+    # ارسال گزارش شکیل به تلگرام
     send_telegram_alert(len(raw_candidates), len(alive_pool), len(verified_top100))
-    print("🏁 Processing finished successfully!")
+    print("🏁 Processing finished successfully! Zero-zombie era has begun.")
 
 if __name__ == "__main__":
     main()
