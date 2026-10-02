@@ -2,7 +2,7 @@
 ================================================================================
 * REPOSITORY   : mmkeshavarzz/v2ray-configs
 * SCRIPT NAME  : scraper.py (Enterprise Iran-Verified Edition - Top 100)
-* ARCHITECTURE : Layer 4 Socket + Layer 7 TLS + Check-Host IRAN Node Verification
+* ARCHITECTURE : Layer 4 Socket + Layer 7 TLS + Check-Host IRAN Node + Telegram
 * SPECIFICATION: Zero Zombie configs, Filter-out Blocked Cloudflare Anycast CIDRs
 ================================================================================
 """
@@ -10,7 +10,6 @@
 import os
 import re
 import ssl
-import sys
 import time
 import json
 import base64
@@ -77,7 +76,6 @@ HTTP_HEADERS = {
 
 REGEX_CONFIG_PATTERN = r'''(vmess://[^\s<"']+|vless://[^\s<"']+|ss://[^\s<"']+|trojan://[^\s<"']+)'''
 
-# رنج آی‌پی‌های تابلو کلودفلر که در ۹۹٪ اپراتورها دراپ (Drop) می‌شوند
 BLOCKED_CLOUDFLARE_RANGES = [
     "172.67.", "104.16.", "104.17.", "104.18.", "104.19.", "104.20.",
     "104.21.", "104.22.", "104.23.", "104.24.", "104.25.", "104.26.",
@@ -90,7 +88,6 @@ BLOCKED_CLOUDFLARE_RANGES = [
 # ------------------------------------------------------------------------------
 
 def safe_b64_decode(data_str: str) -> str:
-    """رمزگشایی با مدیریت هوشمند طول و بالشتک پدینگ بیس ۶۴"""
     clean_str = data_str.strip().replace(" ", "").replace("\n", "").replace("\r", "")
     pad = len(clean_str) % 4
     if pad:
@@ -101,7 +98,6 @@ def safe_b64_decode(data_str: str) -> str:
         return ""
 
 def parse_config_schema(raw_link: str) -> dict:
-    """تجزیه و استخراج پارامترهای اتصال از انواع پروتکل‌ها"""
     raw_link = raw_link.strip()
     if not raw_link:
         return None
@@ -116,13 +112,9 @@ def parse_config_schema(raw_link: str) -> dict:
             port = int(info.get("port", 443))
             sni = str(info.get("sni", info.get("host", ""))).strip()
             return {
-                "protocol": "vmess",
-                "host": host,
-                "port": port,
-                "sni": sni or host,
+                "protocol": "vmess", "host": host, "port": port, "sni": sni or host,
                 "net": str(info.get("net", "tcp")).lower(),
-                "tls": str(info.get("tls", "")).lower(),
-                "raw": raw_link
+                "tls": str(info.get("tls", "")).lower(), "raw": raw_link
             }
 
         elif raw_link.startswith(("vless://", "trojan://")):
@@ -134,12 +126,8 @@ def parse_config_schema(raw_link: str) -> dict:
             host = parsed.hostname.strip() if parsed.hostname else ""
             port = int(parsed.port) if parsed.port else 443
             return {
-                "protocol": parsed.scheme.lower(),
-                "host": host,
-                "port": port,
-                "sni": sni.strip() or host,
-                "tls": sec.lower(),
-                "net": net_type.lower(),
+                "protocol": parsed.scheme.lower(), "host": host, "port": port,
+                "sni": sni.strip() or host, "tls": sec.lower(), "net": net_type.lower(),
                 "raw": raw_link
             }
 
@@ -152,28 +140,22 @@ def parse_config_schema(raw_link: str) -> dict:
                 host = back_part.split(":")[0]
                 port = int(back_part.split(":")[1].split("#")[0])
             return {
-                "protocol": "ss",
-                "host": host.strip(),
-                "port": int(port),
-                "sni": "",
-                "tls": "none",
-                "net": "tcp",
-                "raw": raw_link
+                "protocol": "ss", "host": host.strip(), "port": int(port),
+                "sni": "", "tls": "none", "net": "tcp", "raw": raw_link
             }
     except Exception:
         return None
     return None
 
 # ------------------------------------------------------------------------------
-# ۳. پالایشگاه پکت‌ها: فیلتر کردن زامبی‌ها و رنج‌های مرده در ایران
+# ۳. پالایشگاه پکت‌ها: فیلتر کردن زامبی‌ها
 # ------------------------------------------------------------------------------
 
 def is_ip_dead_in_iran(host: str) -> bool:
-    """شناسایی دامنه‌ها و رنج‌های بلاک‌شده عمومی کلودفلر/فستلی"""
     try:
         resolved_ip = socket.gethostbyname(host)
     except Exception:
-        return True  # آی‌پی ریزالو نشود یعنی کانفیگ درجا باطل است
+        return True
 
     for bad_range in BLOCKED_CLOUDFLARE_RANGES:
         if resolved_ip.startswith(bad_range):
@@ -184,7 +166,6 @@ def is_ip_dead_in_iran(host: str) -> bool:
     return False
 
 def verify_tls_handshake_pure(host: str, port: int, sni: str) -> bool:
-    """ارسال پکت ClientHello برای اطمینان از زنده بودن پورت و سرویس TLS"""
     try:
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
@@ -194,14 +175,12 @@ def verify_tls_handshake_pure(host: str, port: int, sni: str) -> bool:
                 if ss.cipher():
                     return True
     except ssl.SSLError:
-        # در پروتکل Reality خطای TLS طبیعی و نشانه زنده بودن است
         return True
     except Exception:
         return False
     return False
 
 def evaluate_node_vitality(config: dict) -> dict:
-    """تست ترکیبی سرعت سوکت و هندشیک برای ارزیابی پایداری"""
     if not config:
         return None
 
@@ -210,11 +189,9 @@ def evaluate_node_vitality(config: dict) -> dict:
     sni = config["sni"]
     tls = config["tls"]
 
-    # ۱. فیلتر رنج آی‌پی‌های مرده
     if is_ip_dead_in_iran(host):
         return None
 
-    # ۲. تست پینگ اتصال خام سوکت
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(GLOBAL_SOCKET_TIMEOUT)
     t0 = time.perf_counter()
@@ -226,7 +203,6 @@ def evaluate_node_vitality(config: dict) -> dict:
         s.close()
         return None
 
-    # ۳. راستی‌آزمایی لایه TLS
     if tls in ["tls", "reality"] or port in [443, 8443, 2053, 2083, 2087, 2096]:
         if not verify_tls_handshake_pure(host, port, sni):
             return None
@@ -235,16 +211,15 @@ def evaluate_node_vitality(config: dict) -> dict:
     return config
 
 # ------------------------------------------------------------------------------
-# ۴. راستی‌آزمایی سرورها با سنسور پینگ ایران (Check-Host API)
+# ۴. راستی‌آزمایی با سنسور پینگ ایران
 # ------------------------------------------------------------------------------
 
 def test_ping_from_iran(host: str) -> bool:
-    """استعلام وضعیت زنده بودن آی‌پی از پروب ایران (تهران/شیراز)"""
     try:
         url = f"https://check-host.net/check-ping?host={host}&node=ir1.node.check-host.net"
         req = requests.get(url, headers={"Accept": "application/json"}, timeout=3.5)
         if req.status_code != 200:
-            return True  # در صورت محدودیت API، پکت را بی‌دلیل حذف نکن
+            return True
         
         req_data = req.json()
         request_id = req_data.get("request_id")
@@ -265,14 +240,12 @@ def test_ping_from_iran(host: str) -> bool:
     return True
 
 # ------------------------------------------------------------------------------
-# ۵. موتور خزنده و جمع‌آوری از مخازن و کانال‌ها
+# ۵. موتور خزنده و جمع‌آوری کانفیگ‌ها
 # ------------------------------------------------------------------------------
 
 def harvest_raw_configs_from_sources() -> list:
-    """گردآوری همه‌جانبه کانفیگ‌ها از منابع تلگرام و گیت‌هاب"""
     accumulated = []
     
-    # استخراج از تلگرام
     with requests.Session() as s:
         s.headers.update(HTTP_HEADERS)
         for channel in PUBLIC_TELEGRAM_CHANNELS:
@@ -283,17 +256,12 @@ def harvest_raw_configs_from_sources() -> list:
             except Exception:
                 continue
 
-    # استخراج هوشمند از گیت‌هاب
     for entry in UPSTREAM_GITHUB_SUBS:
-        urls = []
-        if entry.startswith("http://") or entry.startswith("https://"):
-            urls = [entry]
-        else:
-            urls = [
-                f"https://raw.githubusercontent.com/{entry}/main/sub.txt",
-                f"https://raw.githubusercontent.com/{entry}/master/sub.txt",
-                f"https://raw.githubusercontent.com/{entry}/main/config.txt"
-            ]
+        urls = [entry] if entry.startswith("http") else [
+            f"https://raw.githubusercontent.com/{entry}/main/sub.txt",
+            f"https://raw.githubusercontent.com/{entry}/master/sub.txt",
+            f"https://raw.githubusercontent.com/{entry}/main/config.txt"
+        ]
             
         for u in urls:
             try:
@@ -310,12 +278,7 @@ def harvest_raw_configs_from_sources() -> list:
                 
     return list(set(accumulated))
 
-# ------------------------------------------------------------------------------
-# ۶. غنی‌سازی دیتابیس با موقعیت جغرافیایی IP-API
-# ------------------------------------------------------------------------------
-
 def attach_country_codes(nodes: list):
-    """استعلام دسته‌ای لوکیشن سرورها بدون خطر اسپم API"""
     unique_hosts = list({node["host"] for node in nodes if node.get("host")})
     host_to_country = {}
 
@@ -334,26 +297,59 @@ def attach_country_codes(nodes: list):
         node["country"] = host_to_country.get(node["host"], "OTHER")
 
 # ------------------------------------------------------------------------------
-# ۷. اجرا، گزینش الیت (Top 100) و انتشار سابسکریپشن
+# ۶. ماژول تلگرام (پستچی اختصاصی شما) 💌
+# ------------------------------------------------------------------------------
+
+def send_telegram_alert(message: str, top_file_path: str = None):
+    """
+    خواندن توکن‌ها از سکرت‌های محیطی گیت‌هاب اکشنز (پشتیبانی از هر دو نامی که ست کردید)
+    """
+    token = os.getenv("TELEGRAM_TOKEN") or os.getenv("TG_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHANNEL") or os.getenv("TG_CHANNEL_ID")
+    
+    if not token or not chat_id:
+        print("⚠️ Telegram credentials (TOKEN/CHANNEL_ID) not found in env! Cannot send message.")
+        return
+
+    print("📬 Dispatching alert to Telegram...")
+    
+    text_url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    try:
+        requests.post(text_url, json=payload, timeout=8)
+    except Exception as e:
+        print(f"❌ Text send failed: {e}")
+
+    if top_file_path and os.path.exists(top_file_path):
+        doc_url = f"https://api.telegram.org/bot{token}/sendDocument"
+        try:
+            with open(top_file_path, "rb") as doc:
+                files = {"document": (os.path.basename(top_file_path), doc)}
+                data = {"chat_id": chat_id, "caption": "🚀 فایل کانفیگ‌های داغ و تست‌شده Top 100!"}
+                requests.post(doc_url, data=data, files=files, timeout=12)
+            print("✅ Telegram Document Sent Successfully!")
+        except Exception as e:
+            print(f"❌ Document send failed: {e}")
+
+# ------------------------------------------------------------------------------
+# ۷. تابع اصلی و قلب تپنده اسکریپت
 # ------------------------------------------------------------------------------
 
 def main():
     print("=" * 65)
-    print("🚀 ANTI-ZOMBIE ENGINE: Starting Full Scan & Deep Purge (Target: Top 100)")
+    print("🚀 ANTI-ZOMBIE ENGINE: Starting Full Scan (Target: Top 100)")
     print("=" * 65)
 
     raw_candidates = harvest_raw_configs_from_sources()
     print(f"📦 Gathered raw targets: {len(raw_candidates)}")
 
-    parsed_list = []
-    for raw in raw_candidates:
-        p = parse_config_schema(raw)
-        if p:
-            parsed_list.append(p)
-
+    parsed_list = [p for raw in raw_candidates if (p := parse_config_schema(raw))]
     print(f"⚙️ Parsed valid schemas: {len(parsed_list)}")
 
-    # مرحله اول: آزمون سوکت و تصفیه آی‌پی‌های سوخته
     alive_pool = []
     with ThreadPoolExecutor(max_workers=WORKER_THREADS) as executor:
         futures = {executor.submit(evaluate_node_vitality, item): item for item in parsed_list}
@@ -368,24 +364,19 @@ def main():
     print(f"🛡️ Survived Initial TLS & CIDR Sanitization: {len(alive_pool)}")
 
     if not alive_pool:
-        print("⚠️ Warning: No nodes survived. Exiting safely.")
+        print("⚠️ Warning: No nodes survived.")
         return
 
-    # مرتب‌سازی دقیق بر اساس کمترین لتنسی
     alive_pool.sort(key=lambda x: x["latency"])
 
-    # مرحله دوم: اعتبارسنجی ۱۰۰ تای برتر (Top 100) با سنسور داخل ایران
     print(f"🇮🇷 Verifying Top {TARGET_ELITE_COUNT} candidates against Iran sensors...")
     verified_top100 = []
-    
-    # برای حفظ سلامت ریت‌لیمیت، ابتدا کاندیداها را ارزیابی می‌کنیم
     for candidate in alive_pool:
         if test_ping_from_iran(candidate["host"]):
             verified_top100.append(candidate)
         if len(verified_top100) >= TARGET_ELITE_COUNT:
             break
 
-    # اگر به هر دلیلی تعداد کمتر از ۱۰۰ شد، باقی ظرفیت با بهترین لتنسی‌ها پر می‌شود
     if len(verified_top100) < TARGET_ELITE_COUNT:
         for candidate in alive_pool:
             if candidate not in verified_top100:
@@ -395,28 +386,19 @@ def main():
 
     print(f"🎯 Successfully Selected Elite Nodes: {len(verified_top100)}")
 
-    # تولید فایل اصلی top100.txt
+    # تولید فایل‌های خروجی
     top100_content = "\n".join([x["raw"] for x in verified_top100])
-    b64_top100 = base64.b64encode(top100_content.encode("utf-8")).decode("utf-8")
     with open("top100.txt", "w", encoding="utf-8") as f:
-        f.write(b64_top100)
-    print("✅ Created verified 'top100.txt'")
+        f.write(base64.b64encode(top100_content.encode("utf-8")).decode("utf-8"))
 
-    # تولید فایل top10.txt (۱۰ تای اول از همین لیست ۱۰۰ تایی برای سازگاری کامل)
     top10_content = "\n".join([x["raw"] for x in verified_top100[:10]])
-    b64_top10 = base64.b64encode(top10_content.encode("utf-8")).decode("utf-8")
     with open("top10.txt", "w", encoding="utf-8") as f:
-        f.write(b64_top10)
-    print("✅ Created backwards-compatible 'top10.txt'")
+        f.write(base64.b64encode(top10_content.encode("utf-8")).decode("utf-8"))
 
-    # تولید فایل جامع sub.txt
     all_content = "\n".join([x["raw"] for x in alive_pool])
-    b64_sub = base64.b64encode(all_content.encode("utf-8")).decode("utf-8")
     with open("sub.txt", "w", encoding="utf-8") as f:
-        f.write(b64_sub)
-    print("✅ Created master 'sub.txt'")
+        f.write(base64.b64encode(all_content.encode("utf-8")).decode("utf-8"))
 
-    # سازمان‌دهی بر اساس کشورها و پروتکل‌ها
     attach_country_codes(alive_pool)
     os.makedirs("protocols", exist_ok=True)
     os.makedirs("countries", exist_ok=True)
@@ -444,102 +426,19 @@ def main():
             with open(f"countries/{c_code}.txt", "w", encoding="utf-8") as cf:
                 cf.write(base64.b64encode(("\n".join(items)).encode("utf-8")).decode("utf-8"))
 
-    print("🏁 Processing finished successfully with 100 verified elite nodes.")
+    # ==========================================
+    # صدا زدن تابع تلگرام در پایان عملیات 📱
+    # ==========================================
+    summary_msg = (
+        "🟢 *عملیات شکار کانفیگ‌ها با موفقیت انجام شد!*\n\n"
+        f"🔍 کانفیگ‌های خام پیدا شده: `{len(raw_candidates)}`\n"
+        f"🛡 زنده‌مانده از فیلترینگ: `{len(alive_pool)}`\n"
+        f"🇮🇷 گلچین نهایی (Top 100): `{len(verified_top100)}`\n\n"
+        "✨ فایل کانفیگ پیوست شد 👇"
+    )
+    send_telegram_alert(summary_msg, "top100.txt")
+
+    print("🏁 Processing finished successfully.")
 
 if __name__ == "__main__":
     main()
-
-# ==============================================================================
-# ۸. دیتابیس جامع هدایت دامنه‌ها و آی‌پی‌های بومی ایران (Geosite Direct Engine)
-# ==============================================================================
-
-GEO_DIRECT_DATABASE = {
-    "version": "2026.10.2",
-    "rules": [
-        {
-            "description": "National Banking & Payment Infrastructure",
-            "outboundTag": "direct",
-            "domains": [
-                "domain:shaparak.ir",
-                "domain:cbi.ir",
-                "domain:bmi.ir",
-                "domain:bankmellat.ir",
-                "domain:tejaratbank.ir",
-                "domain:bsi.ir",
-                "domain:sb24.ir",
-                "domain:samanbank.ir",
-                "domain:parsian-bank.ir",
-                "domain:bpi.ir",
-                "domain:enbank.ir",
-                "domain:sinabank.ir",
-                "domain:postbank.ir",
-                "domain:rb24.ir",
-                "domain:ttbank.ir",
-                "domain:edbi.ir",
-                "domain:bank-maskan.ir",
-                "domain:bki.ir",
-                "domain:karafarinbank.ir",
-                "domain:city-bank.ir",
-                "domain:day24.ir",
-                "domain:zarinpal.com",
-                "domain:payping.ir",
-                "domain:idpay.ir",
-                "domain:jibit.ir",
-                "domain:zibal.ir",
-                "domain:sadadpsp.ir",
-                "domain:pec.ir",
-                "domain:sep.ir",
-                "domain:asanpardakht.ir"
-            ]
-        },
-        {
-            "description": "Domestic Ride-Hailing, Marketplace & Streaming",
-            "outboundTag": "direct",
-            "domains": [
-                "domain:aparat.com",
-                "domain:digikala.com",
-                "domain:snapp.ir",
-                "domain:tapsi.ir",
-                "domain:divar.ir",
-                "domain:sheypoor.com",
-                "domain:telewebion.com",
-                "domain:namava.tv",
-                "domain:filimo.com",
-                "domain:filmnet.ir",
-                "domain:varzesh3.com",
-                "domain:cafebazaar.ir",
-                "domain:myket.ir",
-                "domain:torob.com",
-                "domain:emalls.ir",
-                "domain:basalam.com",
-                "domain:zoomit.ir",
-                "domain:digiato.com",
-                "domain:tgju.org",
-                "domain:tsetmc.com",
-                "domain:nobitex.ir",
-                "domain:wallex.ir",
-                "domain:mci.ir",
-                "domain:irancell.ir",
-                "domain:rightel.ir",
-                "domain:tci.ir",
-                "domain:shatel.ir",
-                "domain:asiatech.ir"
-            ]
-        },
-        {
-            "description": "Governmental & Educational Portals",
-            "outboundTag": "direct",
-            "domains": [
-                "geosite:ir",
-                "domain:ir",
-                "domain:gov.ir",
-                "domain:sanjesh.org",
-                "domain:medu.ir",
-                "domain:tax.gov.ir",
-                "domain:tamin.ir",
-                "domain:rahvar120.ir",
-                "domain:epolice.ir"
-            ]
-        }
-    ]
-}
