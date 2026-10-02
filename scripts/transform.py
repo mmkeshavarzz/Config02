@@ -2,11 +2,11 @@ import json
 import base64
 import random
 import re
-from urllib.parse import unquote, quote
+from urllib.parse import quote
 import requests
 
 def safe_b64_decode(data_str: str) -> str:
-    """دیکود امن بیس۶۴ بدون خطر کرش یا خطای پدینگ"""
+    """دیکود امن بدون شکست در کاراکترهای نامعتبر"""
     if not data_str:
         return ""
     clean_str = data_str.strip().replace(" ", "").replace("\n", "").replace("\r", "")
@@ -19,7 +19,7 @@ def safe_b64_decode(data_str: str) -> str:
         return ""
 
 def country_code_to_emoji(country_code: str) -> str:
-    """تبدیل کد کشور به ایموجی پرچم بدون به هم ریختن سیستم یونیکد"""
+    """تبدیل کد کشور به ایموجی استاندارد پرچم"""
     if not country_code or len(country_code) != 2:
         return "🌐"
     code = country_code.upper()
@@ -28,19 +28,29 @@ def country_code_to_emoji(country_code: str) -> str:
     except Exception:
         return "🌐"
 
+def generate_hex_id(length: int = 6) -> str:
+    """تولید کد ۶ کاراکتری هگزادسیمال شبیه رادیکال (مثلاً 3D513A)"""
+    chars = "0123456789ABCDEF"
+    return "".join(random.choice(chars) for _ in range(length))
+
 def rebrand_config(raw_link: str, country_code: str) -> str:
-    """نام‌گذاری استاندارد و ضدگلوله بدون خراب کردن لینک یا ساختار پروتکل"""
+    """
+    قالب دقیق رادیکال:
+    🇺🇸 US | @mmkeshavarz | B00608
+    """
     try:
         raw_link = raw_link.strip()
         if not raw_link:
             return ""
 
-        flag = country_code_to_emoji(country_code)
-        rand_code = random.randint(100000, 999999)
-        # نام نهایی کانفیگ
-        custom_name = f"{flag} | @mmkeshavarz | {rand_code}"
+        c_code = country_code.upper() if (country_code and len(country_code) == 2) else "XX"
+        flag = country_code_to_emoji(c_code)
+        hex_id = generate_hex_id(6)
+        
+        # قالب دقیق رادیکال
+        custom_name = f"{flag} {c_code} | @mmkeshavarz | {hex_id}"
 
-        # 1. هندل کردن پروتکل VMess
+        # 1. هندل پروتکل VMess
         if raw_link.startswith("vmess://"):
             raw_b64 = raw_link[8:]
             decoded_json = safe_b64_decode(raw_b64)
@@ -51,32 +61,26 @@ def rebrand_config(raw_link: str, country_code: str) -> str:
             encoded_bytes = json.dumps(data, ensure_ascii=False).encode("utf-8")
             return "vmess://" + base64.b64encode(encoded_bytes).decode("utf-8")
 
-        # 2. هندل کردن VLESS، Trojan، Shadowsocks و Hysteria
+        # 2. هندل پروتکل‌های مبتنی بر URL (VLESS, Trojan, SS, Hy2)
         elif any(raw_link.startswith(p) for p in ["vless://", "trojan://", "ss://", "hysteria://", "hy2://"]):
-            # پاک کردن هر چیزی که بعد از # آمده
             base_part = raw_link.split("#")[0]
-            # انکود ایمن کاراکترها برای سازگاری با تمام نسخه‌های v2rayNG و Happ
             encoded_title = quote(custom_name)
             return f"{base_part}#{encoded_title}"
 
         return raw_link
     except Exception:
-        # در صورت بروز هرگونه خطا، خود لینک دست‌نخورده بازگردانده می‌شود تا کار متوقف نشود
         return raw_link
 
 def parse_config_schema(raw_link: str) -> dict:
-    """استخراج مشخصات اتصال بدون دستکاری هدرها و جلوگیری از باگ DNS"""
+    """استخراج امن پارامترهای هاست، پورت و SNI"""
     if not raw_link or not isinstance(raw_link, str):
         return None
 
     raw_link = raw_link.strip()
     try:
-        # پاکسازی بخش ریمارک قبل از استخراج آدرس سرور جهت جلوگیری از UnicodeError
         clean_target = raw_link.split("#")[0]
 
-        # استخراج VLESS و Trojan
         if clean_target.startswith(("vless://", "trojan://")):
-            # پیدا کردن بخش بعد از @ و قبل از پورت
             pattern = r"://(?:[^@]+@)?(\[[a-fA-F0-9:]+\]|[^/:]+)(?::(\d+))?"
             match = re.search(pattern, clean_target)
             if not match:
@@ -104,7 +108,6 @@ def parse_config_schema(raw_link: str) -> dict:
                 "sni": sni, "tls": tls, "net": net_type, "raw": raw_link
             }
 
-        # استخراج VMess
         elif clean_target.startswith("vmess://"):
             raw_b64 = clean_target[8:]
             decoded_json = safe_b64_decode(raw_b64)
@@ -121,7 +124,6 @@ def parse_config_schema(raw_link: str) -> dict:
                 "net": str(info.get("net", "tcp")).lower(), "raw": raw_link
             }
 
-        # استخراج Shadowsocks
         elif clean_target.startswith("ss://"):
             pattern = r"@(\[[a-fA-F0-9:]+\]|[^/:]+):(\d+)"
             match = re.search(pattern, clean_target)
@@ -132,34 +134,33 @@ def parse_config_schema(raw_link: str) -> dict:
                     "protocol": "ss", "host": host, "port": port,
                     "sni": "", "tls": "none", "net": "tcp", "raw": raw_link
                 }
-
     except Exception:
         return None
 
     return None
 
 def attach_country_codes(nodes: list):
-    """دریافت نام کشور با فال‌بک ایمن و اعمال ریبرندینگ"""
+    """دریافت نام کشور و تغییر نام نهایی کانفیگ‌ها به فرمت رادیکال"""
     if not nodes:
         return
 
-    unique_hosts = list({node["host"] for node in nodes if node.get("host") and not node["host"].replace(".", "").isdigit()})
+    # استخراج هاست‌ها برای درخواست IP-API
+    unique_hosts = list({node["host"] for node in nodes if node.get("host")})
     host_to_country = {}
 
-    # فراخوانی گروهی با تایم‌اوت کوتاه
     for i in range(0, len(unique_hosts), 100):
         batch = unique_hosts[i:i+100]
         try:
-            r = requests.post("http://ip-api.com/batch", json=batch, timeout=4)
+            r = requests.post("http://ip-api.com/batch", json=batch, timeout=5)
             if r.status_code == 200:
                 for row in r.json():
                     if row.get("status") == "success":
-                        host_to_country[row.get("query")] = row.get("countryCode", "OTHER")
+                        host_to_country[row.get("query")] = row.get("countryCode", "US")
         except Exception:
             pass
 
     for node in nodes:
-        c_code = host_to_country.get(node.get("host"), "OTHER")
+        c_code = host_to_country.get(node.get("host"), "US")
         node["country"] = c_code
-        # تغییر نام تضمینی لینک خام
+        # بازنویسی نام به سبک رادیکال
         node["raw"] = rebrand_config(node.get("raw", ""), c_code)
