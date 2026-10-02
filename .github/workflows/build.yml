@@ -13,6 +13,12 @@ jobs:
       - name: Checkout Repository 🛎️
         uses: actions/checkout@v3
 
+      - name: Install Xray Core
+        run: |
+          bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
+          which xray
+
+
       - name: Set up Python 🐍
         uses: actions/setup-python@v4
         with:
