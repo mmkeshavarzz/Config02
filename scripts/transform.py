@@ -3,9 +3,9 @@ import base64
 import random
 import re
 from urllib.parse import quote
-import requests
 
 def safe_b64_decode(data_str: str) -> str:
+    """رمزگشایی ایمن رشته‌های Base64 حتی با وجود فاصله‌ها یا پدینگ ناقص"""
     if not data_str:
         return ""
     clean_str = data_str.strip().replace(" ", "").replace("\n", "").replace("\r", "")
@@ -61,7 +61,7 @@ def rebrand_config(raw_link: str, country_code: str) -> str:
     except Exception:
         return raw_link
 
-def parse_config_schema(raw_link: str) -> dict:
+def parse_config_schema(raw_link: str) -> dict | None:
     if not raw_link or not isinstance(raw_link, str):
         return None
 
@@ -127,27 +127,3 @@ def parse_config_schema(raw_link: str) -> dict:
         return None
 
     return None
-
-def attach_country_codes(nodes: list):
-    if not nodes:
-        return
-
-    unique_hosts = list({node["host"] for node in nodes if node.get("host")})
-    host_to_country = {}
-
-    for i in range(0, len(unique_hosts), 100):
-        batch = unique_hosts[i:i+100]
-        try:
-            r = requests.post("http://ip-api.com/batch", json=batch, timeout=5)
-            if r.status_code == 200:
-                for row in r.json():
-                    if row.get("status") == "success":
-                        host_to_country[row.get("query")] = row.get("countryCode", "US")
-        except Exception:
-            pass
-
-    for node in nodes:
-        c_code = host_to_country.get(node.get("host"), "US")
-        node["country"] = c_code
-        # ‼️ این خطه که اونجادوی اسم رو میزنه:
-        node["raw"] = rebrand_config(node.get("raw", ""), c_code)
