@@ -3,7 +3,6 @@ import base64
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# ایمپورت توابع از سایر ماژول‌های پوشه scripts
 from nodes import harvest_raw_configs_from_sources
 from transform import parse_config_schema, attach_country_codes
 from healthcheck import evaluate_node_vitality
@@ -24,12 +23,13 @@ def send_telegram_alert(raw_count: int, alive_count: int, elite_count: int):
     BRANCH = "main"
 
     raw_top100_url = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/top100.txt"
+    raw_top10_url = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/top10.txt"
     cdn_top100_url = f"https://cdn.jsdelivr.net/gh/{REPO_NAME}@{BRANCH}/top100.txt"
     vless_sub = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/protocols/vless.txt"
     raw_sub_url = f"https://raw.githubusercontent.com/{REPO_NAME}/{BRANCH}/sub.txt"
 
     subscription_message = (
-        "🚀 *تصفیه‌خانه ضد زامبی: لیست تاپ 100 نخبگان*\n"
+        "🚀 *تصفیه‌خانه ضد زامبی: لیست نخبگان*\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📊 *گزارش فیلتراسیون عمیق:*\n"
         f"▫️ کل کانفیگ‌های شکارشده: `{raw_count}`\n"
@@ -37,8 +37,10 @@ def send_telegram_alert(raw_count: int, alive_count: int, elite_count: int):
         f"▫️ گلچین نهایی بدون پینگ منفی: `{elite_count}`\n"
         "━━━━━━━━━━━━━━━━━━━━━━\n\n"
         "🔗 *لینک‌های سابسکریپشن فعال:*\n\n"
-        "⚡ *لینک ضدفیلتر jsDelivr (پیشنهادی):*\n"
+        "⚡ *لینک ضدفیلتر jsDelivr (تاپ 100 پیشنهادی):*\n"
         f"`{cdn_top100_url}`\n\n"
+        "🔥 *لینک 10 موشک بالستیک (Top 10):*\n"
+        f"`{raw_top10_url}`\n\n"
         "🛰️ *لینک مستقیم گیت‌هاب (Top 100):*\n"
         f"`{raw_top100_url}`\n\n"
         "💎 *اختصاصی VLESS Reality & TCP:*\n"
@@ -85,7 +87,6 @@ def main():
 
     print(f"🛡️ Survived Real TLS Handshake: {len(alive_pool)}")
 
-    # 🛑 فیلتر مرگبار ضد زامبی: حذف نودهای با پینگ بالا یا مشکوک
     alive_pool = [node for node in alive_pool if node.get("latency", 9999) < MAX_ACCEPTABLE_LATENCY_MS]
     print(f"⚡ Filtered Nodes with Low Latency (<{int(MAX_ACCEPTABLE_LATENCY_MS)}ms): {len(alive_pool)}")
 
@@ -93,25 +94,25 @@ def main():
         print("⚠️ Warning: No nodes survived the strict vitality check.")
         return
 
-    # مرتب‌سازی بر اساس امتیاز کیفی (Reality و Vless در صدر)
+    # مرتب‌سازی بر اساس امتیاز کیفی
     alive_pool.sort(key=lambda x: x["score"])
-    verified_top100 = alive_pool[:TARGET_ELITE_COUNT]
+    
+    # ‼️ این خط نجات‌بخش است: اول ریبرندینگ انجام میشه، بعد ذخیره فایل!
+    print("💅 Attaching country codes and rebranding to @Raydikalx style...")
+    attach_country_codes(alive_pool)
 
+    verified_top100 = alive_pool[:TARGET_ELITE_COUNT]
     print(f"🎯 Successfully Selected Elite Nodes: {len(verified_top100)}")
 
-    # ذخیره‌سازی داده‌ها با فرمت Base64
     def write_b64(filename, items):
         content = "\n".join([x["raw"] for x in items])
         with open(filename, "w", encoding="utf-8") as f:
             f.write(base64.b64encode(content.encode("utf-8")).decode("utf-8"))
 
-    # نوشتن فایل‌های ریشه
     write_b64("top100.txt", verified_top100)
     write_b64("top10.txt", verified_top100[:10])
     write_b64("sub.txt", alive_pool)
 
-    # تفکیک کشوری و پروتکلی
-    attach_country_codes(alive_pool)
     os.makedirs("protocols", exist_ok=True)
     os.makedirs("countries", exist_ok=True)
 
@@ -136,7 +137,6 @@ def main():
         if items:
             write_b64(f"countries/{c_code}.txt", items)
 
-    # ارسال گزارش شکیل به تلگرام
     send_telegram_alert(len(raw_candidates), len(alive_pool), len(verified_top100))
     print("🏁 Processing finished successfully! Zero-zombie era has begun.")
 
