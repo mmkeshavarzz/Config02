@@ -13,10 +13,14 @@ jobs:
       - name: Checkout Repository 🛎️
         uses: actions/checkout@v3
 
-      - name: Install Xray Core
+      - name: Install Xray Core (Direct & Fast) ⚡
         run: |
-          bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-          which xray
+          curl -sL https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip -o xray.zip
+          sudo unzip -o xray.zip xray -d /usr/local/bin/
+          sudo chmod +x /usr/local/bin/xray
+          rm -f xray.zip
+          xray version
+
 
 
       - name: Set up Python 🐍
