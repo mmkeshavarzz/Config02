@@ -2,8 +2,8 @@ name: Update V2Ray Sub
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
-  workflow_dispatch: 
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
