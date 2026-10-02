@@ -2,7 +2,7 @@ name: Update V2Ray Sub
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *'  # هر یک ساعت راس دقیقه 00 اجرا می‌شود
   workflow_dispatch:
 
 jobs:
@@ -27,8 +27,7 @@ jobs:
           mkdir -p protocols countries
           touch sub.txt
 
-      - name: Run Scraper 👾
-        # متغیرهای محیطی که کد پایتون بهشون نیاز داره رو از Secretها می‌گیریم
+      - name: Run Modular Scraper Engine 👾
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
@@ -36,17 +35,12 @@ jobs:
           TG_CHANNEL_ID: ${{ secrets.TG_CHANNEL_ID }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          python scraper.py
+          # رفتن به پوشه اصلی و اجرای بیلدر
+          python scripts/build.py
 
-      - name: Commit and push changes
+      - name: Commit and push changes 🚀
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "🤖 Auto-update configs & top10: $(date +'%Y-%m-%d %H:%M')" || exit 0
-          git push
-
-          
-          git add sub.txt protocols/ countries/
-          
-          git diff --staged --quiet || (git commit -m "🤖 Auto-update & categorize configs: $(date +'%Y-%m-%d %H:%M')" && git push)
+          git add top100.txt top10.txt sub.txt protocols/ countries/
+          git diff --staged --quiet || (git commit -m "🤖 Auto-update modular configs: $(date +'%Y-%m-%d %H:%M')" && git push)
