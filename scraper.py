@@ -45,8 +45,9 @@ PUBLIC_TELEGRAM_CHANNELS = [
 ]
 
 UPSTREAM_GITHUB_SUBS = [
-    "0xRadikal/Free-v2ray-Configs",
-    "itsyebekhe/PSG",
+    "patterniha/Free-Configs/blob/main/configs.txt"
+    "0xRadikal/Free-v2ray-Configs/blob/main/top100.txt",
+    "itsyebekhe/PSG/blob/main/config.txt",
     "Delta-Kronecker/V2ray-Config",
     "mahsanet/MahsaFreeConfig",
     "iampedii/whitedns-sub",
