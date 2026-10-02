@@ -5,6 +5,9 @@ on:
     - cron: '0 * * * *'  # هر یک ساعت راس دقیقه 00 اجرا می‌شود
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,8 +24,6 @@ jobs:
           rm -f xray.zip
           xray version
 
-
-
       - name: Set up Python 🐍
         uses: actions/setup-python@v4
         with:
@@ -30,12 +31,13 @@ jobs:
 
       - name: Install dependencies 📦
         run: |
-          pip install requests
+          python -m pip install --upgrade pip
+          pip install requests urllib3
 
       - name: Prepare Folders and Files 📄
         run: |
-          mkdir -p protocols countries
-          touch sub.txt
+          mkdir -p protocols countries scripts
+          touch sub.txt top100.txt top10.txt
 
       - name: Run Modular Scraper Engine 👾
         env:
@@ -45,12 +47,20 @@ jobs:
           TG_CHANNEL_ID: ${{ secrets.TG_CHANNEL_ID }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          # رفتن به پوشه اصلی و اجرای بیلدر
-          python scripts/build.py
+          # هوشمند: اجرای پایپ‌لاین ماژولار (با پشتیبانی از هر دو نام build.py یا pipeline.py)
+          if [ -f "scripts/pipeline.py" ]; then
+            python scripts/pipeline.py
+          elif [ -f "scripts/build.py" ]; then
+            python scripts/build.py
+          elif [ -f "scraper.py" ]; then
+            python scraper.py
+          else
+            echo "❌ No runnable script found in scripts/!" && exit 1
+          fi
 
       - name: Commit and push changes 🚀
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add top100.txt top10.txt sub.txt protocols/ countries/
-          git diff --staged --quiet || (git commit -m "🤖 Auto-update modular configs: $(date +'%Y-%m-%d %H:%M')" && git push)
+          git diff --staged --quiet || (git commit -m "🤖 Auto-update modular configs: $(date +'%Y-%m-%d %H:%M')" && git pull --rebase origin main && git push)
