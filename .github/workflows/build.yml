@@ -2,7 +2,7 @@ name: Update V2Ray Sub
 
 on:
   schedule:
-    - cron: '0 * * * *'  # هر یک ساعت راس دقیقه 00 اجرا می‌شود
+    - cron: '*/30 * * * *'  # هر یک ساعت راس دقیقه 00 اجرا می‌شود
   workflow_dispatch:
 
 permissions:
