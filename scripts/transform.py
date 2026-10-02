@@ -6,7 +6,6 @@ from urllib.parse import quote
 import requests
 
 def safe_b64_decode(data_str: str) -> str:
-    """دیکود امن بدون شکست در کاراکترهای نامعتبر"""
     if not data_str:
         return ""
     clean_str = data_str.strip().replace(" ", "").replace("\n", "").replace("\r", "")
@@ -19,7 +18,6 @@ def safe_b64_decode(data_str: str) -> str:
         return ""
 
 def country_code_to_emoji(country_code: str) -> str:
-    """تبدیل کد کشور به ایموجی استاندارد پرچم"""
     if not country_code or len(country_code) != 2:
         return "🌐"
     code = country_code.upper()
@@ -29,15 +27,10 @@ def country_code_to_emoji(country_code: str) -> str:
         return "🌐"
 
 def generate_hex_id(length: int = 6) -> str:
-    """تولید کد ۶ کاراکتری هگزادسیمال شبیه رادیکال (مثلاً 3D513A)"""
     chars = "0123456789ABCDEF"
     return "".join(random.choice(chars) for _ in range(length))
 
 def rebrand_config(raw_link: str, country_code: str) -> str:
-    """
-    قالب دقیق رادیکال:
-    🇺🇸 US | @mmkeshavarz | B00608
-    """
     try:
         raw_link = raw_link.strip()
         if not raw_link:
@@ -47,10 +40,8 @@ def rebrand_config(raw_link: str, country_code: str) -> str:
         flag = country_code_to_emoji(c_code)
         hex_id = generate_hex_id(6)
         
-        # قالب دقیق رادیکال
         custom_name = f"{flag} {c_code} | @mmkeshavarz | {hex_id}"
 
-        # 1. هندل پروتکل VMess
         if raw_link.startswith("vmess://"):
             raw_b64 = raw_link[8:]
             decoded_json = safe_b64_decode(raw_b64)
@@ -61,7 +52,6 @@ def rebrand_config(raw_link: str, country_code: str) -> str:
             encoded_bytes = json.dumps(data, ensure_ascii=False).encode("utf-8")
             return "vmess://" + base64.b64encode(encoded_bytes).decode("utf-8")
 
-        # 2. هندل پروتکل‌های مبتنی بر URL (VLESS, Trojan, SS, Hy2)
         elif any(raw_link.startswith(p) for p in ["vless://", "trojan://", "ss://", "hysteria://", "hy2://"]):
             base_part = raw_link.split("#")[0]
             encoded_title = quote(custom_name)
@@ -72,7 +62,6 @@ def rebrand_config(raw_link: str, country_code: str) -> str:
         return raw_link
 
 def parse_config_schema(raw_link: str) -> dict:
-    """استخراج امن پارامترهای هاست، پورت و SNI"""
     if not raw_link or not isinstance(raw_link, str):
         return None
 
@@ -140,11 +129,9 @@ def parse_config_schema(raw_link: str) -> dict:
     return None
 
 def attach_country_codes(nodes: list):
-    """دریافت نام کشور و تغییر نام نهایی کانفیگ‌ها به فرمت رادیکال"""
     if not nodes:
         return
 
-    # استخراج هاست‌ها برای درخواست IP-API
     unique_hosts = list({node["host"] for node in nodes if node.get("host")})
     host_to_country = {}
 
@@ -162,5 +149,5 @@ def attach_country_codes(nodes: list):
     for node in nodes:
         c_code = host_to_country.get(node.get("host"), "US")
         node["country"] = c_code
-        # بازنویسی نام به سبک رادیکال
+        # ‼️ این خطه که اونجادوی اسم رو میزنه:
         node["raw"] = rebrand_config(node.get("raw", ""), c_code)
