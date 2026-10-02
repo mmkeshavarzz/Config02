@@ -40,7 +40,7 @@ def rebrand_config(raw_link: str, country_code: str) -> str:
         flag = country_code_to_emoji(c_code)
         hex_id = generate_hex_id(6)
         
-        custom_name = f"{flag} {c_code} | @mmkeshavarz | {hex_id}"
+        custom_name = f"{flag} {c_code} | @mmkeshavarzz | {hex_id}"
 
         if raw_link.startswith("vmess://"):
             raw_b64 = raw_link[8:]
