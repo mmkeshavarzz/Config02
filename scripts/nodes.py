@@ -1,70 +1,116 @@
-import re
+import base64
 import requests
-from transform import safe_b64_decode
+from concurrent.futures import ThreadPoolExecutor
 
-PUBLIC_TELEGRAM_CHANNELS = [
-    "Vless_Reality_Free", "v2rayNG_VPNo", "v2cross", "DarkVPNpro",
-    "proxystore11", "v2rayngvpn", "Napsternetv_config", "anti_filter_v2ray",
-    "Freedom_v2ray", "Free_Internet_iran", "v2ray_sub", "FreeProxyVless",
-    "ShadowrocketConfig", "TG_V2ray_Pool", "Global_Proxy_V2ray", "vpnfail_v2ray"
-]
-
+# ==============================================================================
+# 🛰️ لیست منابع طلایی و فوق‌العاده جامع (اولویت‌بندی شده از VIP تا کمکی)
+# ==============================================================================
 UPSTREAM_GITHUB_SUBS = [
-    https://raw.githubusercontent.com/patterniha/Free-Configs/main/configs.txt
-    https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs.txt
-    https://raw.githubusercontent.com/itsyebekhe/PSG/main/subscriptions/xray/mix
-    https://github.com/Delta-Kronecker/V2ray-Config/raw/refs/heads/main/config/all_configs.txt
-    https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/mtn/sub_1.txt
-    https://raw.githubusercontent.com/iampedii/whitedns-sub/refs/heads/main/base64.txt
-    https://openproxylist.com/v2ray/rawlist/text
-    https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/refs/heads/main/configs/proxy_configs_tested.txt
-    https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt
-    https://raw.githubusercontent.com/iampedii/whitedns-sub/refs/heads/main/cloudflare-base64.txt
-    https://raw.githubusercontent.com/arshiacomplus/v2rayExtractor/refs/heads/main/mix/sub.html
-    https://raw.githubusercontent.com/ShadowException/VPN/refs/heads/main/configs/VPN-cat
-    https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt
-    https://raw.githubusercontent.com/v2FreeHub/v2hub-configs/refs/heads/main/Sub-AutoUpdate
-    https://raw.githubusercontent.com/prominbro/sub/refs/heads/main/212.txt
-    https://raw.githubusercontent.com/Mahdi0024/ProxyCollector/master/sub/proxies.txt
-    https://raw.githubusercontent.com/luxxuria/harvester/refs/heads/main/speed_tested.txt
-    https://raw.githubusercontent.com/barry-far/V2ray-config/main/All_Configs_Sub.txt
-    https://github.com/Epodonios/v2ray-configs/raw/main/All_Configs_Sub.txt
-    https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/refs/heads/main/V2Ray-Config-By-EbraSha-All-Type.txt
-    https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt
-    https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/refs/heads/main/all_configs.txt
+    # 👑 --- اولویت اول: شاه‌رگ‌ها و منابع اصلی درخواستی (VIP Sources) ---
+    "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/top100.txt",
+    "https://raw.githubusercontent.com/patterniha/Free-Configs/main/configs.txt",
+    "https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs.txt",
+    "https://raw.githubusercontent.com/itsyebekhe/PSG/main/subscriptions/xray/mix",
+    "https://raw.githubusercontent.com/Delta-Kronecker/V2ray-Config/main/config/all_configs.txt",
+    "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/mtn/sub_1.txt",
+    "https://raw.githubusercontent.com/iampedii/whitedns-sub/main/base64.txt",
+    "https://openproxylist.com/v2ray/rawlist/text",
+    "https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/main/configs/proxy_configs_tested.txt",
+    "https://raw.githubusercontent.com/roosterkid/openproxylist/main/V2RAY_RAW.txt",
+    "https://raw.githubusercontent.com/iampedii/whitedns-sub/main/cloudflare-base64.txt",
+    "https://raw.githubusercontent.com/arshiacomplus/v2rayExtractor/main/mix/sub.html",
+    "https://raw.githubusercontent.com/ShadowException/VPN/main/configs/VPN-cat",
+    "https://raw.githubusercontent.com/zieng2/wl/main/vless_universal.txt",
+    "https://raw.githubusercontent.com/v2FreeHub/v2hub-configs/main/Sub-AutoUpdate",
+    "https://raw.githubusercontent.com/prominbro/sub/main/212.txt",
+    "https://raw.githubusercontent.com/Mahdi0024/ProxyCollector/master/sub/proxies.txt",
+    "https://raw.githubusercontent.com/luxxuria/harvester/main/speed_tested.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-config/main/All_Configs_Sub.txt",
+    "https://raw.githubusercontent.com/Epodonios/v2ray-configs/main/All_Configs_Sub.txt",
+    "https://raw.githubusercontent.com/ebrasha/free-v2ray-public-list/main/V2Ray-Config-By-EbraSha-All-Type.txt",
+    "https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt",
+    "https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt",
+
+    # 🛡️ --- اولویت دوم: منابع معتبر قدیمی برای پوشش حداکثری (Backup Nodes) ---
+    "https://raw.githubusercontent.com/itsyebekhe/PSG/main/config.txt",
+    "https://raw.githubusercontent.com/yebekhe/TVC/main/subscriptions/xray/normal/mix",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Sub1.txt",
+    "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Sub2.txt",
+    "https://raw.githubusercontent.com/freefq/free/master/v2",
+    "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/sub_merge.txt",
+    "https://raw.githubusercontent.com/mfuu/v2ray/master/v2ray",
+    "https://raw.githubusercontent.com/soroushmirzaei/telegram-configs-collector/main/protocols/reality",
+    "https://raw.githubusercontent.com/soroushmirzaei/telegram-configs-collector/main/protocols/vless"
 ]
 
-HTTP_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Cache-Control": "no-cache"
-}
+TARGET_PROTOCOLS = ("vless://", "vmess://", "trojan://", "ss://", "hysteria://", "hy2://")
 
-REGEX_CONFIG_PATTERN = r'''(vmess://[^\s<"']+|vless://[^\s<"']+|ss://[^\s<"']+|trojan://[^\s<"']+)'''
+def safe_b64_decode(data_str: str) -> str:
+    """رمزگشایی ایمن رشته‌های Base64 حتی با وجود فاصله‌ها یا پدینگ ناقص"""
+    if not data_str:
+        return ""
+    clean_str = data_str.strip().replace(" ", "").replace("\n", "").replace("\r", "")
+    pad = len(clean_str) % 4
+    if pad:
+        clean_str += "=" * (4 - pad)
+    try:
+        return base64.b64decode(clean_str).decode("utf-8", errors="ignore")
+    except Exception:
+        return ""
 
-def harvest_raw_configs_from_sources() -> list:
-    accumulated = []
+def fetch_single_sub(url: str) -> list[str]:
+    """دریافت و استخراج رکوردهای کانفیگ از یک منبع اینترنتی"""
+    configs = []
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=12)
+        if resp.status_code != 200:
+            return configs
+
+        content = resp.text.strip()
+        if not content:
+            return configs
+
+        # بررسی در صورت Base64 بودن محتوای کل سابسکریپشن
+        if not any(proto in content[:150].lower() for proto in ["vless://", "vmess://", "trojan://", "ss://"]):
+            decoded = safe_b64_decode(content)
+            if any(proto in decoded[:150].lower() for proto in ["vless://", "vmess://", "trojan://", "ss://"]):
+                content = decoded
+
+        for line in content.splitlines():
+            line = line.strip()
+            if line.startswith(TARGET_PROTOCOLS):
+                configs.append(line)
+
+    except Exception:
+        pass
+
+    return configs
+
+def harvest_raw_configs_from_sources() -> list[str]:
+    """درو کردن همزمان تمام سورس‌ها با ThreadPoolExecutor بدون اتلاف وقت"""
+    all_raw = []
+    print(f"📡 Harvesting from {len(UPSTREAM_GITHUB_SUBS)} upstream providers...")
     
-    with requests.Session() as s:
-        s.headers.update(HTTP_HEADERS)
-        for channel in PUBLIC_TELEGRAM_CHANNELS:
-            try:
-                r = s.get(f"https://t.me/s/{channel}", timeout=4)
-                if r.status_code == 200:
-                    accumulated.extend(re.findall(REGEX_CONFIG_PATTERN, r.text))
-            except Exception:
-                continue
+    with ThreadPoolExecutor(max_workers=25) as executor:
+        results = executor.map(fetch_single_sub, UPSTREAM_GITHUB_SUBS)
+        for res in results:
+            all_raw.extend(res)
 
-    for entry in UPSTREAM_GITHUB_SUBS:
-        try:
-            res = requests.get(entry, headers=HTTP_HEADERS, timeout=5)
-            if res.status_code == 200 and len(res.text) > 40:
-                found = re.findall(REGEX_CONFIG_PATTERN, res.text)
-                if not found:
-                    dec = safe_b64_decode(res.text)
-                    found = re.findall(REGEX_CONFIG_PATTERN, dec)
-                accumulated.extend(found)
-        except Exception:
-            continue
-                
-    return list(set(accumulated))
+    # حذف کانفیگ‌های تکراری بر اساس شناسه و آدرس سرور (قبل از هشتگ نام)
+    seen = set()
+    deduped = []
+    for c in all_raw:
+        core_part = c.split("#")[0].strip()
+        if core_part and core_part not in seen:
+            seen.add(core_part)
+            deduped.append(c)
+
+    print(f"✅ Total unique raw configs pulled: {len(deduped)}")
+    return deduped
+
+if __name__ == "__main__":
+    test_run = harvest_raw_configs_from_sources()
+    print(f"Preview: Harvested {len(test_run)} configs successfully!")
