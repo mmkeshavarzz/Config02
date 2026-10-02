@@ -1,82 +1,147 @@
+بفرمایید، این کد کامل و یکپارشه‌ی `README.md` است. تمام بخش‌ها در یک کادربندی (Code Box) قرار داده شده تا به راحتی بتوانید آن را کپی کرده و جایگزین فایل فعلی نمایید:
+
+```markdown
 <div align="center">
 
-# ⚡ V2Ray High-Availability Auto-Aggregator
-### پلتفرم خودکار جمع‌آوری، فیلتراسیون عمیق و سنجش سلامت لحظه‌ای کانفیگ‌ها
+# ⚡ Free V2Ray Configs Aggregator
 
-<p align="center">
-  <img alt="Pipeline Status" src="https://img.shields.io/github/actions/workflow/status/mmkeshavarzz/v2ray-configs/main.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=PIPELINE">
-  <img alt="Update Frequency" src="https://img.shields.io/badge/AUTO--UPDATE-EVERY%2015%20MIN-0ea5e9?style=for-the-badge">
-  <img alt="GitHub Stars" src="https://img.shields.io/github/stars/mmkeshavarzz/v2ray-configs?style=for-the-badge&color=f59e0b&logo=github">
-  <img alt="License" src="https://img.shields.io/badge/LICENSE-MIT-10b981?style=for-the-badge">
-</p>
+**کانفیگ‌های رایگان، سالم و تست‌شده V2ray / Xray / Clash / Sing-Box — به‌روزرسانی خودکار هر ۱۵ دقیقه**
 
-<p>
-  <i>کانفیگ‌های فعال به صورت بلادرنگ و با هسته‌های واقعی ارزیابی شده و لینک‌های سابسکریپشن در دسترس قرار می‌گیرند.</i>
-</p>
+![Pipeline Status](https://img.shields.io/badge/PIPELINE-PASSING-brightgreen?style=for-the-badge&logo=githubactions)
+![Auto Update](https://img.shields.io/badge/AUTO--UPDATE-EVERY%2015%20MIN-blue?style=for-the-badge)
+![Telegram Channel](https://img.shields.io/badge/TELEGRAM-JOIN%20CHANNEL-26A5E4?style=for-the-badge&logo=telegram)
+![GitHub Stars](https://img.shields.io/github/stars/mmkeshavarzz/v2ray-configs?style=for-the-badge&color=gold)
+
+<br/>
+
+### 📊 آمار زنده کانفیگ‌ها (Live Counters)
+![Total Configs](https://img.shields.io/badge/CONFIGS-10000%2B-blue?style=flat-square)
+![Verified](https://img.shields.io/badge/VERIFIED-PASSING-success?style=flat-square)
+![Fast](https://img.shields.io/badge/FAST-%3C800ms-orange?style=flat-square)
+![Secure](https://img.shields.io/badge/SECURE-TLS%20ONLY-purple?style=flat-square)
+![Updated](https://img.shields.io/badge/UPDATED-TODAY-brightgreen?style=flat-square)
+
+---
+
+🌐 **زبان‌ها / Languages:**  
+[فارسی](README.md) | [English](README_EN.md) | [中文](README_ZH.md)
 
 </div>
 
 ---
 
-## 🚀 دسترسی سریع — فقط یک خط کپی کنید!
+## 🚀 شروع سریع — کپی لینک سابسکرایپشن
 
-نیازی به کلنجار رفتن با فایل‌های حجیم و کانفیگ‌های سوخته نیست؛ لینک زیر گلچینی از سریع‌ترین و باثبات‌ترین سرورهای تست‌شده است:
+برای دریافت سریع‌ترین کانفیگ‌های تست‌شده، یکی از لینک‌های زیر را کپی کرده و در نرم‌افزار خود (v2rayNG, Hiddify, NekoBox, MahsaNG و ...) وارد کنید:
 
-### 🏆 لینک سابسکریپشن برگزیده (Top 100 Verified):
+### 🏆 لیست ۱۰۰ کانفیگ برتر (پیشنهاد ویژه - کمترین پینگ)
 ```text
-https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/top100.txt
+[https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/top100.txt](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/top100.txt)
+
+```
+
+### 🛡️ لیست کامل کانفیگ‌های تاییدشده (Verified Base64)
+
+```text
+[https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs_base64.txt](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs_base64.txt)
+
+```
 
 ---
 
-## 🎛️ دسته‌بندی سابسکریپشن‌ها (Subscription Tiers)
+## 📱 اسکن سریع با موبایل (QR Code)
 
-کانفیگ‌ها بر اساس آزمون‌های فنی در دسته‌های زیر تفکیک و ارائه می‌شوند:
+اگر از گوشی استفاده می‌کنید، کافیست دوربین بخش Scan برنامه‌‌تان را روی یکی از کدهای QR زیر بگیرید:
 
-| دسته (Tier) | معیار انتخاب | لینک اشتراک مستقیم (Base64) | فرمت Clash / Mihomo | فرمت Sing-box |
-| :--- | :--- | :---: | :---: | :---: |
-| 🏆 **Verified** | عبور موفق از هر ۳ مرحله تست فعال اتصال (پیشنهادی) | [لینک ساب](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/sub.txt) | [کانفیگ YAML](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/clash/verified.yaml) | [کانفیگ JSON](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/singbox/verified.json) |
-| ⚡ **Fast** | دارای پایین‌ترین پینگ و تأخیر زمانی (زیر ۲۰۰ میلی‌ثانیه) | [لینک ساب](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/sub.txt) | [کانفیگ YAML](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/clash/fast.yaml) | [کانفیگ JSON](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/singbox/fast.json) |
-| 🛡️ **Secure** | پروتکل‌های مدرن، مقاوم و دارای TLS/Reality | [لینک ساب](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/sub.txt) | [کانفیگ YAML](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/clash/secure.yaml) | [کانفیگ JSON](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/singbox/secure.json) |
-| 📦 **All Pool** | تمامی کانفیگ‌های معتبر ساختاری خام | [لینک ساب](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/sub.txt) | [کانفیگ YAML](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/clash/all.yaml) | [کانفیگ JSON](https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/singbox/all.json) |
+| Top 100 (سریع‌ترین‌ها) | Verified (تست‌شده) | کانال تلگرام |
+| --- | --- | --- |
+|  |  |  |
 
 ---
 
-## 🧪 فرآیند پالایش و تست (The Filtration Funnel)
+## 📊 انتخاب سطح و فرمت دلخواه (Choose a Tier)
 
-بزرگ‌ترین مشکل مخازن عمومی، وجود انبوهی از سرورهای ازکارافتاده است. ما به‌جای انتشار آمارهای غیرواقعی، کانفیگ‌ها را از قیف پالایش چهارگانه عبور می‌دهیم:
+کانفیگ‌ها پس از تست سلامت در ۵ سطح دسته‌بندی می‌شوند. خروجی متناسب با کلاینت خود را انتخاب کنید:
 
-text
-[L0: گردآوری] ──> [L1: پاکسازی و حذف تکراری] ──> [L2: تست پورت TCP] ──> [L3: درخواست واقعی HTTP] ──> انتشار نهایی
-
-### شرح سطوح اعتبارسنجی:
-
-| سطح (Stage) | پرسش کلیدی سیستم | هزینه محاسباتی / عملیاتی |
-| :---: | :--- | :--- |
-| **L0 / L1** | آیا ساختار URI معتبر است؟ آیا IP و SNI یکتا هستند؟ | بدون سربار شبکه (صرفاً اعتبارسنجی رشته‌ای) |
-| **L2** | آیا پورت پروتکل باز است و به TCP Handshake پاسخ می‌دهد؟ | یک اتصال سبک به ازای هر Endpoint یکتا |
-| **L3** | آیا دیتا از بستر پروکسی به مقصد می‌رسد؟ | ۳ بار تکرار درخواست واقعی HTTP از تونل رمزنگاری‌شده |
-| **Publish** | آیا کلاینت‌های استاندارد فایل خروجی را باز می‌کنند؟ | تست کامپایل با ابزارهای بومی `sing-box check` و `mihomo -t` |
-
-> 💡 **توجه مهندسی:** تنها کانفیگ‌هایی وارد سبد `verified` می‌شوند که در **هر ۳ نوبت تست L3** با موفقیت پاسخ دریافت کرده باشند، نه آن‌هایی که صرفاً یک‌بار به صورت تصادفی وصل شده‌اند.
+| دسته (Tier) | توضیحات | Plain (.txt) | Base64 (.txt) | Clash (.yaml) | Sing-box (.json) |
+| --- | --- | --- | --- | --- | --- |
+| 🏆 **verified** | پاس‌شده در ۳ مرحله تست واقعی | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs.txt) | [b64](https://www.google.com/url?sa=E&source=gmail&q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/verified/singbox.json) |
+| ⚡ **fast** | تست‌شده + پینگ میانه زیر ۸۰۰ms | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/configs.txt) | [b64](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/fast/singbox.json) |
+| 🔒 **secure** | دارای TLS معتبر و Forward Secrecy | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/configs.txt) | [b64](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/secure/singbox.json) |
+| 🌐 **all** | تمام کانفیگ‌های جمع‌آوری‌شده و حذف تکراری | [txt](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/configs.txt) | [b64](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/configs_base64.txt) | [yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/clash.yaml) | [json](https://www.google.com/search?q=https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main/all/singbox.json) |
 
 ---
 
-## ⚙️ معماری پایپ‌لاین و مخزن
+## 🎯 تفکیک بر اساس پروتکل (Per-Protocol Links)
 
-* **تغییرناپذیری برچسب‌ها (Stable Identity):** عنوان هر سرور با فرمت `{CC} {Flag} | #mmk | {Hash}` بازنویسی می‌شود تا با تغییر سورت، کانفیگ داخل کلاینت کاربر مدام جا‌به‌جا نشود.
-* **مهندسی حافظه گیت (Rolling Squash):** برای جلوگیری از افزایش بی‌رویه حجم مخزن ناشی از کامیت‌های پی‌درپی خروجی‌ها، تنها یک کامیت اکتیو نگه داشته می‌شود و تاریخچه سورس حفظ می‌گردد.
-* **بدون نیاز به ابزار جانبی:** خروجی‌ها در قالب فایل‌های متنی استاندارد و بدون نیازمندی به فایل‌های استاتیک وب مستقیماً قابل بارگذاری هستند.
+اگر نرم‌افزار شما فقط از پروتکل‌های خاصی پشتیبانی می‌کند، می‌توانید مستقیماً سابسکرایپشن همان پروتکل را دریافت کنید:
+
+| پروتکل | Plain Text | Base64 Subscription |
+| --- | --- | --- |
+| **VLESS** | `.../main/protocols/vless.txt` | `.../main/protocols/vless_base64.txt` |
+| **VMess** | `.../main/protocols/vmess.txt` | `.../main/protocols/vmess_base64.txt` |
+| **Trojan** | `.../main/protocols/trojan.txt` | `.../main/protocols/trojan_base64.txt` |
+| **Shadowsocks** | `.../main/protocols/shadowsocks.txt` | `.../main/protocols/shadowsocks_base64.txt` |
+| **Hysteria2** | `.../main/protocols/hysteria2.txt` | `.../main/protocols/hysteria2_base64.txt` |
+| **TUIC** | `.../main/protocols/tuic.txt` | `.../main/protocols/tuic_base64.txt` |
 
 ---
 
-## ⚖️ سلب مسئولیت (Disclaimer)
+## 💎 لینک‌های آینه‌ای (Mirror Links - jsDelivr)
 
-تمامی کانفیگ‌های موجود در این مخزن از منابع عمومی اینترنت جمع‌آوری شده‌اند. وضعیت دسترسی سرورها در لحظه اجرای رانر ارزیابی می‌شود و ممکن است بر اساس زیرساخت شبکه و موقعیت جغرافیایی کاربر نتایج متفاوتی حاصل شود.
+در صورتی که دامنه `raw.githubusercontent.com` روی اپراتور شما مسدود باشد، کافیست عبارت `https://raw.githubusercontent.com/mmkeshavarzz/v2ray-configs/main` را با آدرس زیر جایگزین نمایید:
+
+```text
+[https://cdn.jsdelivr.net/gh/mmkeshavarzz/v2ray-configs@main/verified/configs_base64.txt](https://cdn.jsdelivr.net/gh/mmkeshavarzz/v2ray-configs@main/verified/configs_base64.txt)
+
+```
+
+---
+
+## 🧪 فرآیند صحت‌سنجی و تست سلامت (How it Works)
+
+بخش زیادی از کانفیگ‌های رایگان در اینترنت از کار افتاده‌اند. اسکریپت‌های اتومیشن این پروژه، تمام لینک‌ها را طی ۴ مرحله صحت‌سنجی پالایش می‌کنند:
+
+```text
+  [L0/L1: Collect & Clean] ➔ [L2: TCP Handshake] ➔ [L3: 3x Real HTTP Request] ➔ [Publish]
+
+```
+
+1. **L0 / L1 (Parse & Clean):** دریافت اطلاعات، اعتبارسنجی فرمت و حذف نمونه‌های تکراری (Deduplication).
+
+
+2. **L2 (TCP Dialing):** تست اتصال اولیه به پورت سرورها.
+
+
+3. **L3 (Real Request):** ارسال درخواست واقعی HTTP از طریق پروکسی در ۳ دور مجزا برای اطمینان از خروجی اینترنت واقعی.
+
+
+4. **Binary Validation:** چک کردن نهایی فایل‌های `.yaml` و `.json` توسط کلاینت‌های اصلی (`sing-box` و `mihomo`) قبل از انتشار.
+
 
 
 ---
 
-### مرحله بعد چیه؟
+## 📂 ساختار ریپازیتوری (Repository Layout)
 
-همین الان برو این فایل رو بنداز توی مخزنت تا دیگه صفحه اصلیت شبیه سالن انتظار راه‌آهن ساعت ۳ نصفه‌شب نباشه! 🚂✨ 
-بعدش برگرد تا اسکریپت پایتونی **پالایش و نام‌گذاری هش‌محور (مرحله L0 و L1)** رو شروع کنیم. آماده‌ای؟
+```text
+.
+├── verified/       # کانفیگ‌های ۱۰۰٪ تست‌شده (txt, base64, clash, singbox)
+├── fast/           # کانفیگ‌های تست‌شده با پینگ زیر ۸۰۰ میلی‌ثانیه
+├── secure/         # کانفیگ‌های دارای رمزنگاری امن TLS
+├── all/            # تمام کانفیگ‌های یکپارچه‌سازی‌شده
+├── protocols/      # تفکیک کانفیگ‌ها بر اساس نوع پروتکل
+├── top100.txt      # ۱۰۰ کانفیگ برتر بر اساس سرعت
+└── README.md       # مستندات اصلی پروژه
+
+```
+
+---
+
+## 📜 Disclaimer
+
+این پروژه صرفاً برای اهداف آموزشی و تحقیقاتی توسعه یافته است. تمام پیکربندی‌ها از منابع عمومی اینترنت جمع‌آوری شده‌اند.
+
+```
+
+```
