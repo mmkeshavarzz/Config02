@@ -7,7 +7,7 @@ from nodes import harvest_raw_configs_from_sources
 from transform import parse_config_schema, attach_country_codes
 from healthcheck import evaluate_node_vitality
 
-WORKER_THREADS = 40
+WORKER_THREADS = 100
 TARGET_ELITE_COUNT = 100
 MAX_ACCEPTABLE_LATENCY_MS = 1200.0  # سقف مجاز تاخیر؛ بالاتر از این زباله‌دان تاریخ است!
 
